@@ -4,12 +4,10 @@
                                                   DDLOADER 2
                                         5TH GENERATION SUCCESSOR TO LOAD-R
                               -LOADS GAMES BY JSON FILES, NO MORE HARD CODING GAMES :)
-                                        That's the whole reason DDLoader got
-                                                no more updates!
+                                        
                                                  
 
-                              (can you believe this all started as a patcher for friends?
-                                  now I code, full-time, to mod video games. lol)
+                            (can you believe this all started as a patcher for friends?)
 
                   NOTES:
                     -This is a complete rewrite of the original LOAD-R (again)
@@ -91,6 +89,25 @@ public:
     sf::Font font;
     ButtonState state;
 
+    Button()
+    {
+        font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
+		text.setFont(font);
+		text.setString("Button");
+		text.setCharacterSize(15);
+		text.setFillColor(sf::Color::Black);
+		text.setStyle(sf::Text::Bold);
+		text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
+		text.setPosition(0,0);
+		rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
+		rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
+		rect.setPosition(0,0);
+		rect.setFillColor(sf::Color(150,150,150));
+		rect.setOutlineThickness(2);
+		rect.setOutlineColor(sf::Color::Black);
+		state = DEFAULT;
+    }
+
     Button(std::string textToDisplay, sf::Vector2f position)
     {
         font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -169,7 +186,14 @@ public:
     sf::Text genre;
     sf::Text platform;
     sf::Text bepinexVersion;
-    sf::Text isInstalled;
+    sf::Text isBepinexInstalled;
+
+    Button bepinex5Button;
+    Button directoryButton;
+    Button wipeButton;
+    Button playButton;
+    Button bepinex6Button;
+    bool isInstalled;
 
     //TODO: 
     // 
@@ -218,10 +242,10 @@ public:
         this->title.setStyle(sf::Text::Bold);
 
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        sf::FloatRect descBounds = description.getLocalBounds();
-        this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
-        this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
-        this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
+        //sf::FloatRect descBounds = description.getLocalBounds();
+        //this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
+        //this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
+        //this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
 
         this->title.setPosition(400, 100);
@@ -229,6 +253,14 @@ public:
         this->genre.setPosition(100, 150);
         this->platform.setPosition(100, 175);
         this->bepinexVersion.setPosition(400, 140);
+
+        this->bepinex5Button = Button("Install BepInEx 5", sf::Vector2f(100, 200));
+        this->directoryButton = Button("Change Game Directory", sf::Vector2f(100, 250));
+        this->wipeButton = Button("Wipe Mods", sf::Vector2f(100, 300));
+        this->playButton = Button("Play", sf::Vector2f(100, 350));
+        this->bepinex6Button = Button("Install BepInEx 6", sf::Vector2f(100, 400));
+
+        this->isInstalled = false;
     }
 
     void update(Game game)
@@ -240,20 +272,32 @@ public:
         this->bepinexVersion.setString("BEPINEX " + game.bepinexVersion);
 
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        sf::FloatRect descBounds = description.getLocalBounds();
-        this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
-        this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
-        this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
+        //sf::FloatRect descBounds = description.getLocalBounds();
+        //this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
+        //this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
+        //this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
     }
 
     void draw(sf::RenderWindow& window)
 	{
     	window.draw(title);
-    	window.draw(description);
+    	//window.draw(description);
     	//window.draw(genre);
     	//window.draw(platform);
     	window.draw(bepinexVersion);
+
+        if (!this->isInstalled)
+        {
+            bepinex5Button.draw(window);
+            bepinex6Button.draw(window);
+		}
+		else
+		{
+			directoryButton.draw(window);
+            wipeButton.draw(window);
+            playButton.draw(window);
+        }
     }
 };
 
