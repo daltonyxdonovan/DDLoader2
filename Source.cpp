@@ -48,6 +48,7 @@ using json = nlohmann::json;
 
 
 #pragma region CLASSES/ENUM
+
 enum ButtonState { HOVER, PRESSED, DEFAULT };
 
 class Game
@@ -168,6 +169,20 @@ public:
     sf::Text genre;
     sf::Text platform;
     sf::Text bepinexVersion;
+    sf::Text isInstalled;
+
+    //TODO: 
+    // 
+    // 
+    //      ADD ISINSTALLED STUFF
+    // 
+    //      ADD BUTTONS FOR:
+    //            -BEPINEX
+    //            -DIRECTORY
+    //            -WIPE
+    //            -PLAY
+    //
+    //      ADD SECTION FOR SHOWING MODS INSTALLED
     
     UI(std::vector<Game> games)
     {
@@ -182,13 +197,17 @@ public:
         this->description.setString(games[0].description);
         this->genre.setString(games[0].genre);
         this->platform.setString(games[0].platform);
-        this->bepinexVersion.setString(games[0].bepinexVersion);
+        this->bepinexVersion.setString("BEPINEX " + games[0].bepinexVersion);
 
-        this->title.setCharacterSize(30);
-        this->description.setCharacterSize(15);
+        this->title.setCharacterSize(40);
+        this->description.setCharacterSize(10);
         this->genre.setCharacterSize(15);
         this->platform.setCharacterSize(15);
         this->bepinexVersion.setCharacterSize(15);
+
+        this->title.setOutlineColor(sf::Color::Black);
+        this->title.setOutlineThickness(1);
+
 
         this->title.setFillColor(sf::Color::White);
         this->description.setFillColor(sf::Color::White);
@@ -199,16 +218,17 @@ public:
         this->title.setStyle(sf::Text::Bold);
 
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        this->description.setOrigin((int)this->description.getLocalBounds().width / 2, (int)this->description.getLocalBounds().height / 2);
+        sf::FloatRect descBounds = description.getLocalBounds();
+        this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
         this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
         this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
 
-        this->title.setPosition(100, 50);
-        this->description.setPosition(100, 100);
+        this->title.setPosition(400, 100);
+        this->description.setPosition(400, 600);
         this->genre.setPosition(100, 150);
         this->platform.setPosition(100, 175);
-        this->bepinexVersion.setPosition(100, 200);
+        this->bepinexVersion.setPosition(400, 140);
     }
 
     void update(Game game)
@@ -217,10 +237,11 @@ public:
         this->description.setString(game.description);
         this->genre.setString(game.genre);
         this->platform.setString(game.platform);
-        this->bepinexVersion.setString(game.bepinexVersion);
+        this->bepinexVersion.setString("BEPINEX " + game.bepinexVersion);
 
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        this->description.setOrigin((int)this->description.getLocalBounds().width / 2, (int)this->description.getLocalBounds().height / 2);
+        sf::FloatRect descBounds = description.getLocalBounds();
+        this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
         this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
         this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
@@ -230,8 +251,8 @@ public:
 	{
     	window.draw(title);
     	window.draw(description);
-    	window.draw(genre);
-    	window.draw(platform);
+    	//window.draw(genre);
+    	//window.draw(platform);
     	window.draw(bepinexVersion);
     }
 };
@@ -256,14 +277,13 @@ void Log(std::string text)
     {
         file << text << std::endl;
         file.close();
-        std::cout << "[LOG] " << text << std::endl;
+        std::cout << "[LOG]: " << text << std::endl;
     }
     else 
     {
         std::cerr << "Error opening or creating log file!" << std::endl;
     }
 }
-
 
 void LoadGames(std::vector<Game>& games) 
 {
@@ -296,7 +316,7 @@ void LoadGames(std::vector<Game>& games)
 
     for (int i = 0; i < games.size(); i++) 
     {
-        Log("LOADED ASSET FOR: " + games[i].name);
+        Log("Loaded assets for " + games[i].name);
     }
 }
 
@@ -314,7 +334,6 @@ void WipeLog()
     }
 }
 
-
 #pragma endregion
 
 
@@ -327,6 +346,7 @@ sf::RectangleShape programTitlebar;
 
 int main()
 {
+#pragma region INITIALIZATION
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
     sf::Vector2i mousePosition;
     std::vector<Game> games;
@@ -344,7 +364,7 @@ int main()
     programTitlebar.setOutlineThickness(1);
 
 
-
+#pragma endregion
 
     WipeLog();
     LoadGames(games);
@@ -367,7 +387,7 @@ int main()
 
         window.clear(sf::Color(30,30,30));
 
-        
+#pragma region DRAWING
 
         ui.draw(window);
 
@@ -377,6 +397,8 @@ int main()
         buttonExit.update(mousePosition);
         buttonExit.draw(window);
 
+#pragma endregion
+       
         window.display();
     }
 
