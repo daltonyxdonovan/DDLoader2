@@ -318,14 +318,33 @@ void WipeLog()
 #pragma endregion
 
 
-int width = 800;
-int height = 800;
+const int width = 800;
+const int height = 800;
+
+sf::Font font;
+sf::Text programTitle;
+sf::RectangleShape programTitlebar;
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER 2", sf::Style::None);
+    sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
     sf::Vector2i mousePosition;
     std::vector<Game> games;
+    font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
+    programTitle.setFont(font);
+    programTitle.setString("DDLOADER");
+    programTitle.setCharacterSize(24);
+    programTitle.setFillColor(sf::Color::Black);
+    programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
+    programTitle.setPosition(width / 2, 15);
+    programTitlebar.setSize(sf::Vector2f(width, 40));
+    programTitlebar.setFillColor(sf::Color(50, 50, 50, 255));
+    programTitlebar.setPosition(0, 0);
+    programTitlebar.setOutlineColor(sf::Color::Black);
+    programTitlebar.setOutlineThickness(1);
+
+
+
 
     WipeLog();
     LoadGames(games);
@@ -346,12 +365,17 @@ int main()
             window.close();
 
 
-        window.clear();
+        window.clear(sf::Color(30,30,30));
+
+        
+
+        ui.draw(window);
+
+        window.draw(programTitlebar);
+        window.draw(programTitle);
 
         buttonExit.update(mousePosition);
         buttonExit.draw(window);
-
-        ui.draw(window);
 
         window.display();
     }
