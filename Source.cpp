@@ -155,10 +155,6 @@ public:
     {
         if (ticker > 0)
             ticker--;
-        //if mouse is hovering over button, set state to HOVER
-        //if mouse is pressed on button, set state to PRESSED
-        //else set state to DEFAULT
-
         if (state == HOVER)
 		{
         	rect.setFillColor(sf::Color(150,150,150));
@@ -227,10 +223,6 @@ public:
     */
     bool isInstalled;
 
-    //TODO: 
-    // 
-
-    
     UI(std::vector<Game> games)
     {
         buttons = std::vector<Button*>();
@@ -366,10 +358,6 @@ public:
 
     void draw(sf::RenderWindow& window)
 	{
-    	
-    	//window.draw(description);
-    	//window.draw(genre);
-    	//window.draw(platform);
         window.draw(buttonArea);
         window.draw(displayArea);
         window.draw(title);
@@ -482,19 +470,19 @@ sf::RectangleShape programTitlebar;
 
 int main()
 {
-#pragma region INITIALIZATION
+#pragma region INITIALIZATION / TITLEBAR
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
     sf::Vector2i mousePosition;
     std::vector<Game> games;
     font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
     programTitle.setFont(font);
-    programTitle.setString("DDLOADER");
+    programTitle.setString("DDLOADER 2");
     programTitle.setCharacterSize(24);
     programTitle.setFillColor(sf::Color::Black);
     programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
     programTitle.setPosition(width / 2, 15);
     programTitlebar.setSize(sf::Vector2f(width, 40));
-    programTitlebar.setFillColor(sf::Color(20, 20, 20, 255));
+    programTitlebar.setFillColor(sf::Color(30, 30, 30, 255));
     programTitlebar.setPosition(0, 0);
     programTitlebar.setOutlineColor(sf::Color::Black);
     programTitlebar.setOutlineThickness(1);
