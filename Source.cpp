@@ -43,8 +43,6 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-
-
 #pragma region CLASSES/ENUM
 
 enum ButtonState { HOVER, PRESSED, DEFAULT };
@@ -88,9 +86,11 @@ public:
     sf::Text text;
     sf::Font font;
     ButtonState state;
+    int ticker = 0;
 
     Button() 
     {
+        ticker = 0;
         this->rect = sf::RectangleShape();
         this->text = sf::Text();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -117,6 +117,7 @@ public:
 
     Button(std::string textToDisplay, sf::Vector2f position)
     {
+        ticker = 0;
         this->rect = sf::RectangleShape();
         this->text = sf::Text();
         font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -142,11 +143,18 @@ public:
 
     bool isClicked()
     {
-        return state == PRESSED;
+        if (ticker == 0)
+        {
+            
+            return state == PRESSED;
+        }
+        return false;
     }
 
     void update(sf::Vector2i mousePosition)
     {
+        if (ticker > 0)
+            ticker--;
         //if mouse is hovering over button, set state to HOVER
         //if mouse is pressed on button, set state to PRESSED
         //else set state to DEFAULT
@@ -184,6 +192,12 @@ public:
     	window.draw(text);
     }
 
+    void setSize(sf::Vector2f size)
+    {
+        this->rect.setSize(size);
+        rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
+    }
+
 
 };
 
@@ -198,6 +212,10 @@ public:
     sf::Text platform;
     sf::Text bepinexVersion;
     sf::Text isBepinexInstalled;
+    sf::RectangleShape displayArea;
+    sf::RectangleShape buttonArea;
+
+    sf::Text currentWD;
 
     std::vector<Button*> buttons;
     /*
@@ -206,23 +224,12 @@ public:
     3) wipe mods
     4) play
     5) change directory
-
-    
     */
     bool isInstalled;
 
     //TODO: 
     // 
-    // 
-    //      ADD ISINSTALLED STUFF
-    // 
-    //      ADD BUTTONS FOR:
-    //            -BEPINEX
-    //            -DIRECTORY
-    //            -WIPE
-    //            -PLAY
-    //
-    //      ADD SECTION FOR SHOWING MODS INSTALLED
+
     
     UI(std::vector<Game> games)
     {
@@ -239,6 +246,16 @@ public:
         this->genre.setString(games[0].genre);
         this->platform.setString(games[0].platform);
         this->bepinexVersion.setString("BEPINEX " + games[0].bepinexVersion);
+        this->currentWD.setString(games[0].installLocation);
+
+        this->currentWD.setFillColor(sf::Color::White);
+        this->currentWD.setCharacterSize(10);
+        this->currentWD.setStyle(sf::Text::Bold);
+        this->currentWD.setPosition(sf::Vector2f(400, 525));
+        this->currentWD.setFont(font);
+        this->currentWD.setOrigin((int)this->currentWD.getLocalBounds().width / 2, (int)this->currentWD.getLocalBounds().height / 2);
+        
+
 
         this->title.setCharacterSize(40);
         this->description.setCharacterSize(10);
@@ -259,10 +276,6 @@ public:
         this->title.setStyle(sf::Text::Bold);
 
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        //sf::FloatRect descBounds = description.getLocalBounds();
-        //this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
-        //this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
-        //this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
 
         this->title.setPosition(400, 100);
@@ -271,30 +284,34 @@ public:
         this->platform.setPosition(100, 175);
         this->bepinexVersion.setPosition(400, 140);
 
-        this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(100, 200)));
-        this->buttons.push_back(new Button("Install BepInEx 6", sf::Vector2f(100, 250)));
-        this->buttons.push_back(new Button("Wipe Mods", sf::Vector2f(100, 300)));
+        this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(206, 690)));
+        buttons[0]->setSize(sf::Vector2f(370,180));
+        this->buttons.push_back(new Button("Install BepInEx 6", sf::Vector2f(800-206, 690)));
+        buttons[1]->setSize(sf::Vector2f(370,180));
+        this->buttons.push_back(new Button("Wipe Mods", sf::Vector2f(206, 690)));
+        buttons[2]->setSize(sf::Vector2f(370,180));
         this->buttons.push_back(new Button("Play", sf::Vector2f(100, 350)));
-        this->buttons.push_back(new Button("Change Directory", sf::Vector2f(100, 400)));
+        this->buttons.push_back(new Button("Change Directory", sf::Vector2f(400, 555)));
+        buttons[4]->setSize(sf::Vector2f(760,30));
 
         this->isInstalled = false;
+
+        this->buttonArea.setFillColor(sf::Color(30,30,30));
+        this->buttonArea.setSize(sf::Vector2f(780,200));
+        this->buttonArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
+        this->buttonArea.setPosition(400,690);
+        this->buttonArea.setOutlineColor(sf::Color::Black);
+        this->buttonArea.setOutlineThickness(1);
+
+        this->displayArea.setFillColor(sf::Color(30,30,30));
+        this->displayArea.setSize(sf::Vector2f(780,530));
+        this->displayArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
+        this->displayArea.setPosition(400,150);
+        this->displayArea.setOutlineColor(sf::Color::Black);
+        this->displayArea.setOutlineThickness(1);
     }
 
-    void update(Game game)
-    {
-        this->title.setString(game.name);
-        this->description.setString(game.description);
-        this->genre.setString(game.genre);
-        this->platform.setString(game.platform);
-        this->bepinexVersion.setString("BEPINEX " + game.bepinexVersion);
-
-        this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
-        //sf::FloatRect descBounds = description.getLocalBounds();
-        //this->description.setOrigin(descBounds.left + descBounds.width / 2.0f, descBounds.top + descBounds.height / 2.0f);
-        //this->genre.setOrigin((int)this->genre.getLocalBounds().width / 2, (int)this->genre.getLocalBounds().height / 2);
-        //this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
-        this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
-    }
+    
 
     ~UI() 
     {
@@ -303,25 +320,74 @@ public:
         }
     }
 
+    void set(Game game)
+    {
+        this->title.setString(game.name);
+        this->description.setString(game.description);
+        this->genre.setString(game.genre);
+        this->platform.setString(game.platform);
+        this->bepinexVersion.setString("BEPINEX " + game.bepinexVersion);
+        this->currentWD.setString(game.installLocation);
+        this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
+        this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
+    }
+
+    void update(sf::Vector2i mousePosition)
+    {
+        if (!isInstalled)
+        {
+            buttons[0]->update(mousePosition);
+            buttons[1]->update(mousePosition);
+            buttons[4]->update(mousePosition);
+        }
+        else
+        {
+            buttons[2]->update(mousePosition);
+            buttons[3]->update(mousePosition);
+            
+        }
+
+        if (buttons[0]->isClicked() || buttons[1]->isClicked())
+        {
+            isInstalled = true;
+            buttons[0]->state = DEFAULT;
+            buttons[1]->state = DEFAULT;
+            buttons[0]->ticker = 30;
+            buttons[1]->ticker = 30;
+        }
+
+        if (buttons[2]->isClicked())
+        {
+            isInstalled = false;
+            buttons[2]->state = DEFAULT;
+            buttons[2]->ticker = 30;
+        }
+    }
 
     void draw(sf::RenderWindow& window)
 	{
-    	window.draw(title);
+    	
     	//window.draw(description);
     	//window.draw(genre);
     	//window.draw(platform);
+        window.draw(buttonArea);
+        window.draw(displayArea);
+        window.draw(title);
     	window.draw(bepinexVersion);
+        window.draw(currentWD);
 
         if (!isInstalled)
         {
+
             buttons[0]->draw(window);
             buttons[1]->draw(window);
+            buttons[4]->draw(window);
 		}
 		else
 		{
 			buttons[2]->draw(window);
             buttons[3]->draw(window);
-            buttons[4]->draw(window);
+            
         }
     }
 };
@@ -374,9 +440,10 @@ void LoadGames(std::vector<Game>& games)
             std::string descriptionToUse = j["description"];
             std::string genreToUse = j["genre"];
             std::string platformToUse = j["platform"];
+            std::string installLocation = j["installLocation"];
             std::string bepinexVersionToUse = j["bepinexVersion"];
 
-            Game game(nameToUse, descriptionToUse, genreToUse, platformToUse, "", bepinexVersionToUse);
+            Game game(nameToUse, descriptionToUse, genreToUse, platformToUse, installLocation, bepinexVersionToUse);
 
             games.push_back(game);
             file.close();
@@ -427,7 +494,7 @@ int main()
     programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
     programTitle.setPosition(width / 2, 15);
     programTitlebar.setSize(sf::Vector2f(width, 40));
-    programTitlebar.setFillColor(sf::Color(50, 50, 50, 255));
+    programTitlebar.setFillColor(sf::Color(20, 20, 20, 255));
     programTitlebar.setPosition(0, 0);
     programTitlebar.setOutlineColor(sf::Color::Black);
     programTitlebar.setOutlineThickness(1);
@@ -444,20 +511,27 @@ int main()
     {
         mousePosition = sf::Mouse::getPosition(window);
         sf::Event event;
+
         while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Escape)
+                    window.close();
+            }
         }
 
         if (buttonExit.isClicked())
             window.close();
 
 
-        window.clear(sf::Color(30,30,30));
+        window.clear(sf::Color(10,10,10));
 
 #pragma region DRAWING
 
+        ui.update(mousePosition);
         ui.draw(window);
 
         window.draw(programTitlebar);
@@ -467,7 +541,7 @@ int main()
         buttonExit.draw(window);
 
 #pragma endregion
-       
+        window.setFramerateLimit(30);
         window.display();
     }
 
