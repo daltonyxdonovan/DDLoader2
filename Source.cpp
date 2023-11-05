@@ -89,27 +89,36 @@ public:
     sf::Font font;
     ButtonState state;
 
-    Button()
+    Button() 
     {
-        font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
-		text.setFont(font);
-		text.setString("Button");
-		text.setCharacterSize(15);
-		text.setFillColor(sf::Color::Black);
-		text.setStyle(sf::Text::Bold);
-		text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
-		text.setPosition(0,0);
-		rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
-		rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
-		rect.setPosition(0,0);
-		rect.setFillColor(sf::Color(150,150,150));
-		rect.setOutlineThickness(2);
-		rect.setOutlineColor(sf::Color::Black);
-		state = DEFAULT;
+        this->rect = sf::RectangleShape();
+        this->text = sf::Text();
+        this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
+        this->text.setFont(font);
+        this->text.setString("textToDisplay");
+        this->text.setCharacterSize(15);
+        this->text.setFillColor(sf::Color::Black);
+        this->text.setStyle(sf::Text::Bold);
+
+        this->rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
+        this->rect.setFillColor(sf::Color(150,150,150));
+        this->rect.setOutlineThickness(2);
+        this->rect.setOutlineColor(sf::Color::Black);
+
+        this->text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
+        this->text.setPosition(sf::Vector2f(0,0));
+
+        this->rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
+        this->rect.setPosition(sf::Vector2f(0,0));
+
+        this->state = DEFAULT;
     }
+
 
     Button(std::string textToDisplay, sf::Vector2f position)
     {
+        this->rect = sf::RectangleShape();
+        this->text = sf::Text();
         font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
         text.setFont(font);
         text.setString(textToDisplay);
@@ -174,6 +183,8 @@ public:
     	window.draw(rect);
     	window.draw(text);
     }
+
+
 };
 
 class UI
@@ -188,11 +199,16 @@ public:
     sf::Text bepinexVersion;
     sf::Text isBepinexInstalled;
 
-    Button bepinex5Button;
-    Button directoryButton;
-    Button wipeButton;
-    Button playButton;
-    Button bepinex6Button;
+    std::vector<Button*> buttons;
+    /*
+    1) install bepinex 5
+    2) install bepinex 6
+    3) wipe mods
+    4) play
+    5) change directory
+
+    
+    */
     bool isInstalled;
 
     //TODO: 
@@ -210,6 +226,7 @@ public:
     
     UI(std::vector<Game> games)
     {
+        buttons = std::vector<Button*>();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
         this->title.setFont(font);
         this->description.setFont(font);
@@ -254,11 +271,11 @@ public:
         this->platform.setPosition(100, 175);
         this->bepinexVersion.setPosition(400, 140);
 
-        this->bepinex5Button = Button("Install BepInEx 5", sf::Vector2f(100, 200));
-        this->directoryButton = Button("Change Game Directory", sf::Vector2f(100, 250));
-        this->wipeButton = Button("Wipe Mods", sf::Vector2f(100, 300));
-        this->playButton = Button("Play", sf::Vector2f(100, 350));
-        this->bepinex6Button = Button("Install BepInEx 6", sf::Vector2f(100, 400));
+        this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(100, 200)));
+        this->buttons.push_back(new Button("Install BepInEx 6", sf::Vector2f(100, 250)));
+        this->buttons.push_back(new Button("Wipe Mods", sf::Vector2f(100, 300)));
+        this->buttons.push_back(new Button("Play", sf::Vector2f(100, 350)));
+        this->buttons.push_back(new Button("Change Directory", sf::Vector2f(100, 400)));
 
         this->isInstalled = false;
     }
@@ -279,6 +296,14 @@ public:
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
     }
 
+    ~UI() 
+    {
+        for (Button* button : buttons) {
+            delete button;
+        }
+    }
+
+
     void draw(sf::RenderWindow& window)
 	{
     	window.draw(title);
@@ -287,16 +312,16 @@ public:
     	//window.draw(platform);
     	window.draw(bepinexVersion);
 
-        if (!this->isInstalled)
+        if (!isInstalled)
         {
-            bepinex5Button.draw(window);
-            bepinex6Button.draw(window);
+            buttons[0]->draw(window);
+            buttons[1]->draw(window);
 		}
 		else
 		{
-			directoryButton.draw(window);
-            wipeButton.draw(window);
-            playButton.draw(window);
+			buttons[2]->draw(window);
+            buttons[3]->draw(window);
+            buttons[4]->draw(window);
         }
     }
 };
