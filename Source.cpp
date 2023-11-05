@@ -4,9 +4,12 @@
                                                   DDLOADER 2
                                         5TH GENERATION SUCCESSOR TO LOAD-R
                               -LOADS GAMES BY JSON FILES, NO MORE HARD CODING GAMES :)
-                                                 by Daltonyx
+                                        That's the whole reason DDLoader got
+                                                no more updates!
+                                                 
 
-                              (can you believe this all started as a patcher for friends?)
+                              (can you believe this all started as a patcher for friends?
+                                  now I code, full-time, to mod video games. lol)
 
                   NOTES:
                     -This is a complete rewrite of the original LOAD-R (again)
@@ -90,20 +93,29 @@ public:
     Button(std::string textToDisplay, sf::Vector2f position)
     {
         font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
-		text.setFont(font);
-		text.setString(textToDisplay);
-		text.setCharacterSize(15);
-		text.setFillColor(sf::Color::Black);
-		text.setStyle(sf::Text::Bold);
-		rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
-		rect.setFillColor(sf::Color(150,150,150));
-		rect.setOutlineThickness(2);
-		rect.setOutlineColor(sf::Color::Black);
-        rect.setOrigin(rect.getLocalBounds().width / 2, rect.getLocalBounds().height / 2);
-        rect.setPosition(position);
-        text.setOrigin(text.getLocalBounds().width / 2, text.getLocalBounds().height / 2);
+        text.setFont(font);
+        text.setString(textToDisplay);
+        text.setCharacterSize(15);
+        text.setFillColor(sf::Color::Black);
+        text.setStyle(sf::Text::Bold);
+
+        text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
         text.setPosition(position);
+
+        rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
+        rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
+        rect.setPosition(position);
+
+        rect.setFillColor(sf::Color(150,150,150));
+        rect.setOutlineThickness(2);
+        rect.setOutlineColor(sf::Color::Black);
+
         state = DEFAULT;
+    }
+
+    bool isClicked()
+    {
+        return state == PRESSED;
     }
 
     void update(sf::Vector2i mousePosition)
@@ -122,7 +134,7 @@ public:
         }
 		else
 		{
-        	rect.setFillColor(sf::Color(120,120,120));
+        	rect.setFillColor(sf::Color(50,50,50));
         }
 
         if (rect.getGlobalBounds().contains(mousePosition.x,mousePosition.y))
@@ -213,6 +225,15 @@ public:
         this->platform.setOrigin((int)this->platform.getLocalBounds().width / 2, (int)this->platform.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
     }
+
+    void draw(sf::RenderWindow& window)
+	{
+    	window.draw(title);
+    	window.draw(description);
+    	window.draw(genre);
+    	window.draw(platform);
+    	window.draw(bepinexVersion);
+    }
 };
 
 #pragma endregion
@@ -297,16 +318,19 @@ void WipeLog()
 #pragma endregion
 
 
-
+int width = 800;
+int height = 800;
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(800, 800), "DDLOADER 2");
+    sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER 2", sf::Style::None);
     sf::Vector2i mousePosition;
     std::vector<Game> games;
 
     WipeLog();
     LoadGames(games);
+    UI ui(games);
+    Button buttonExit("x", sf::Vector2f(width-20,20)); //I hate the windows title bars man, they're ugly as hell. we will just use our own, thanks
 
     while (window.isOpen())
     {
@@ -318,8 +342,17 @@ int main()
                 window.close();
         }
 
+        if (buttonExit.isClicked())
+            window.close();
+
 
         window.clear();
+
+        buttonExit.update(mousePosition);
+        buttonExit.draw(window);
+
+        ui.draw(window);
+
         window.display();
     }
 
