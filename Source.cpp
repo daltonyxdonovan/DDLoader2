@@ -99,18 +99,14 @@ public:
         this->text.setCharacterSize(15);
         this->text.setFillColor(sf::Color::Black);
         this->text.setStyle(sf::Text::Bold);
-
         this->rect.setSize(sf::Vector2f(text.getLocalBounds().width + 10, text.getLocalBounds().height + 10));
         this->rect.setFillColor(sf::Color(150,150,150));
         this->rect.setOutlineThickness(2);
         this->rect.setOutlineColor(sf::Color::Black);
-
         this->text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
         this->text.setPosition(sf::Vector2f(0,0));
-
         this->rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
         this->rect.setPosition(sf::Vector2f(0,0));
-
         this->state = DEFAULT;
     }
 
@@ -170,7 +166,6 @@ public:
 
         if (rect.getGlobalBounds().contains(mousePosition.x,mousePosition.y))
         {
-            //if mouse is clicked
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
                 state = PRESSED;
             else
@@ -193,15 +188,12 @@ public:
         this->rect.setSize(size);
         rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
     }
-
-
 };
 
 class UI
 {
 public:
     sf::Font font;
-
     sf::Text title;
     sf::Text description;
     sf::Text genre;
@@ -210,9 +202,8 @@ public:
     sf::Text isBepinexInstalled;
     sf::RectangleShape displayArea;
     sf::RectangleShape buttonArea;
-
     sf::Text currentWD;
-
+    bool isInstalled;
     std::vector<Button*> buttons;
     /*
     1) install bepinex 5
@@ -221,7 +212,7 @@ public:
     4) play
     5) change directory
     */
-    bool isInstalled;
+    
 
     UI(std::vector<Game> games)
     {
@@ -232,44 +223,33 @@ public:
         this->genre.setFont(font);
         this->platform.setFont(font);
         this->bepinexVersion.setFont(font);
-
         this->title.setString(games[0].name);
         this->description.setString(games[0].description);
         this->genre.setString(games[0].genre);
         this->platform.setString(games[0].platform);
         this->bepinexVersion.setString("BEPINEX " + games[0].bepinexVersion);
         this->currentWD.setString(games[0].installLocation);
-
         this->currentWD.setFillColor(sf::Color::White);
         this->currentWD.setCharacterSize(10);
         this->currentWD.setStyle(sf::Text::Bold);
         this->currentWD.setPosition(sf::Vector2f(400, 525));
         this->currentWD.setFont(font);
         this->currentWD.setOrigin((int)this->currentWD.getLocalBounds().width / 2, (int)this->currentWD.getLocalBounds().height / 2);
-        
-
-
         this->title.setCharacterSize(40);
         this->description.setCharacterSize(10);
         this->genre.setCharacterSize(15);
         this->platform.setCharacterSize(15);
         this->bepinexVersion.setCharacterSize(15);
-
         this->title.setOutlineColor(sf::Color::Black);
         this->title.setOutlineThickness(1);
-
-
         this->title.setFillColor(sf::Color::White);
         this->description.setFillColor(sf::Color::White);
         this->genre.setFillColor(sf::Color::White);
         this->platform.setFillColor(sf::Color::White);
         this->bepinexVersion.setFillColor(sf::Color::White);
-
         this->title.setStyle(sf::Text::Bold);
-
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
-
         this->title.setPosition(400, 100);
         this->description.setPosition(400, 600);
         this->genre.setPosition(100, 150);
@@ -287,14 +267,12 @@ public:
         buttons[4]->setSize(sf::Vector2f(760,30));
 
         this->isInstalled = false;
-
         this->buttonArea.setFillColor(sf::Color(30,30,30));
         this->buttonArea.setSize(sf::Vector2f(780,200));
         this->buttonArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
         this->buttonArea.setPosition(400,690);
         this->buttonArea.setOutlineColor(sf::Color::Black);
         this->buttonArea.setOutlineThickness(1);
-
         this->displayArea.setFillColor(sf::Color(30,30,30));
         this->displayArea.setSize(sf::Vector2f(780,530));
         this->displayArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
@@ -303,11 +281,10 @@ public:
         this->displayArea.setOutlineThickness(1);
     }
 
-    
-
     ~UI() 
     {
-        for (Button* button : buttons) {
+        for (Button* button : buttons) 
+        {
             delete button;
         }
     }
@@ -366,7 +343,6 @@ public:
 
         if (!isInstalled)
         {
-
             buttons[0]->draw(window);
             buttons[1]->draw(window);
             buttons[4]->draw(window);
@@ -375,7 +351,6 @@ public:
 		{
 			buttons[2]->draw(window);
             buttons[3]->draw(window);
-            
         }
     }
 };
@@ -513,7 +488,6 @@ int main()
 
         if (buttonExit.isClicked())
             window.close();
-
 
         window.clear(sf::Color(10,10,10));
 
