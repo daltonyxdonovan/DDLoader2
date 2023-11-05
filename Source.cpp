@@ -40,6 +40,8 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <cstdlib>
+#include <string>
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -86,11 +88,11 @@ public:
     sf::Text text;
     sf::Font font;
     ButtonState state;
-    int ticker = 0;
+    int ticker = 30;
 
     Button() 
     {
-        ticker = 0;
+        ticker = 30;
         this->rect = sf::RectangleShape();
         this->text = sf::Text();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -113,7 +115,7 @@ public:
 
     Button(std::string textToDisplay, sf::Vector2f position)
     {
-        ticker = 0;
+        ticker = 30;
         this->rect = sf::RectangleShape();
         this->text = sf::Text();
         font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -130,7 +132,7 @@ public:
         rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
         rect.setPosition(position);
 
-        rect.setFillColor(sf::Color(150,150,150));
+        rect.setFillColor(sf::Color(200,200,200));
         rect.setOutlineThickness(2);
         rect.setOutlineColor(sf::Color::Black);
 
@@ -161,7 +163,7 @@ public:
         }
 		else
 		{
-        	rect.setFillColor(sf::Color(50,50,50));
+        	rect.setFillColor(sf::Color(80,80,80));
         }
 
         if (rect.getGlobalBounds().contains(mousePosition.x,mousePosition.y))
@@ -204,6 +206,7 @@ public:
     sf::RectangleShape buttonArea;
     sf::Text currentWD;
     bool isInstalled;
+    std::string bepInstalled = "";
     std::vector<Button*> buttons;
     /*
     1) install bepinex 5
@@ -211,6 +214,7 @@ public:
     3) wipe mods
     4) play
     5) change directory
+    6) open directory
     */
     
 
@@ -227,7 +231,17 @@ public:
         this->description.setString(games[0].description);
         this->genre.setString(games[0].genre);
         this->platform.setString(games[0].platform);
-        this->bepinexVersion.setString("BEPINEX " + games[0].bepinexVersion);
+        this->bepinexVersion.setFillColor(sf::Color::Red);
+        bepInstalled = "FALSE";
+        this->isInstalled = false;
+        if (IsBepinexInstalled(games[0].installLocation))
+        {
+            bepInstalled = "TRUE";
+            this->bepinexVersion.setFillColor(sf::Color::Green);
+            this->isInstalled = true;
+        }
+
+        this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
         this->currentWD.setString(games[0].installLocation);
         this->currentWD.setFillColor(sf::Color::White);
         this->currentWD.setCharacterSize(10);
@@ -239,22 +253,22 @@ public:
         this->description.setCharacterSize(10);
         this->genre.setCharacterSize(15);
         this->platform.setCharacterSize(15);
-        this->bepinexVersion.setCharacterSize(15);
+        this->bepinexVersion.setCharacterSize(10);
         this->title.setOutlineColor(sf::Color::Black);
         this->title.setOutlineThickness(1);
         this->title.setFillColor(sf::Color::White);
         this->description.setFillColor(sf::Color::White);
         this->genre.setFillColor(sf::Color::White);
         this->platform.setFillColor(sf::Color::White);
-        this->bepinexVersion.setFillColor(sf::Color::White);
+        
         this->title.setStyle(sf::Text::Bold);
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
-        this->title.setPosition(400, 100);
+        this->title.setPosition(400, 80);
         this->description.setPosition(400, 600);
         this->genre.setPosition(100, 150);
         this->platform.setPosition(100, 175);
-        this->bepinexVersion.setPosition(400, 140);
+        this->bepinexVersion.setPosition(400, 115);
 
         this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(206, 690)));
         buttons[0]->setSize(sf::Vector2f(370,180));
@@ -265,8 +279,9 @@ public:
         this->buttons.push_back(new Button("Play", sf::Vector2f(100, 350)));
         this->buttons.push_back(new Button("Change Directory", sf::Vector2f(400, 555)));
         buttons[4]->setSize(sf::Vector2f(760,30));
+        this->buttons.push_back(new Button("Open Directory", sf::Vector2f(400, 555)));
+        buttons[5]->setSize(sf::Vector2f(760,30));
 
-        this->isInstalled = false;
         this->buttonArea.setFillColor(sf::Color(30,30,30));
         this->buttonArea.setSize(sf::Vector2f(780,200));
         this->buttonArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
@@ -313,23 +328,63 @@ public:
         {
             buttons[2]->update(mousePosition);
             buttons[3]->update(mousePosition);
+            buttons[5]->update(mousePosition);
             
         }
 
-        if (buttons[0]->isClicked() || buttons[1]->isClicked())
+        if (buttons[0]->isClicked())
         {
-            isInstalled = true;
+            Unzip("resources/bepinex/bepinex5.zip", currentWD.getString());
+        	isInstalled = IsBepinexInstalled(currentWD.getString());
             buttons[0]->state = DEFAULT;
             buttons[1]->state = DEFAULT;
             buttons[0]->ticker = 30;
             buttons[1]->ticker = 30;
+            if (IsBepinexInstalled(currentWD.getString()))
+            {
+                bepInstalled = "TRUE";
+                this->bepinexVersion.setFillColor(sf::Color::Green);
+                this->isInstalled = true;
+                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            }
+        }
+        if (buttons[1]->isClicked())
+		{
+            Unzip("resources/bepinex/bepinex6.zip", currentWD.getString());
+        	isInstalled = IsBepinexInstalled(currentWD.getString());
+        	buttons[0]->state = DEFAULT;
+        	buttons[1]->state = DEFAULT;
+        	buttons[0]->ticker = 30;
+        	buttons[1]->ticker = 30;
+            if (IsBepinexInstalled(currentWD.getString()))
+            {
+                bepInstalled = "TRUE";
+                this->bepinexVersion.setFillColor(sf::Color::Green);
+                this->isInstalled = true;
+                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            }
         }
 
         if (buttons[2]->isClicked())
         {
+            WipeMods(currentWD.getString());
             isInstalled = false;
             buttons[2]->state = DEFAULT;
             buttons[2]->ticker = 30;
+            if (!IsBepinexInstalled(currentWD.getString()))
+            {
+                bepInstalled = "FALSE";
+                this->bepinexVersion.setFillColor(sf::Color::Red);
+                this->isInstalled = false;
+                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            }
+        }
+
+        if (buttons[5]->isClicked())
+		{
+        	OpenDirectory(currentWD.getString());
+        	buttons[5]->state = DEFAULT;
+        	buttons[5]->ticker = 30;
         }
     }
 
@@ -350,8 +405,123 @@ public:
 		else
 		{
 			buttons[2]->draw(window);
-            buttons[3]->draw(window);
+            buttons[5]->draw(window);
         }
+    }
+
+    void Unzip(std::string filePath, std::string dirToUnzipTo) 
+    {
+        Log("Attempting unzipping of " + filePath + " to " + dirToUnzipTo);
+        std::string command = "tar -xf \"" + filePath + "\" -C \"" + dirToUnzipTo + "\" 2>&1";
+
+
+        FILE* pipe = _popen(command.c_str(), "r");
+        if (!pipe) {
+            Log("Error: Unable to open pipe.");
+            return;
+        }
+
+        char buffer[128];
+        Log("[PIPE]:\n\n");
+        while (fgets(buffer, 128, pipe) != NULL) {
+            Log(buffer);
+        }
+
+        _pclose(pipe);
+    }
+
+    void Log(std::string text) 
+    {
+    
+        std::ofstream file("log-ddloader.txt", std::ios_base::app);
+        if (file.is_open()) 
+        {
+            file << text << std::endl;
+            file.close();
+            std::cout << "[LOG]: " << text << std::endl;
+        }
+        else 
+        {
+            std::cerr << "Error opening or creating log file!" << std::endl;
+        }
+    }
+
+    bool IsBepinexInstalled(std::string dir)
+    {
+        std::string path = dir + "/BepInEx";
+	    if (std::filesystem::exists(path))
+	    {
+    	    Log("Passed Bepinex Check!");
+            return true;
+        }
+	
+        Log("BepInEx is not installed!");
+        return false;
+    }
+
+    void WipeMods(std::string dir)
+    {
+        //in order to do this, we have to delete four things!
+        //1. The BepInEx folder
+        //2. The doorstop_config.ini file
+        //3. The winhttp.dll file
+        //4. The changelog.txt file
+        int count = 0;
+        std::string path = dir + "/BepInEx";
+        std::string path2 = dir + "/doorstop_config.ini";
+        std::string path3 = dir + "/winhttp.dll";
+        std::string path4 = dir + "/changelog.txt";
+
+        if (std::filesystem::exists(path))
+	    {
+    	    Log("Deleting " + path);
+    	    std::filesystem::remove_all(path);
+            count++;
+        }
+
+        if (std::filesystem::exists(path2))
+        {
+    	    Log("Deleting " + path2);
+    	    std::filesystem::remove(path2);
+            count++;
+        }
+
+        if (std::filesystem::exists(path3))
+	    {
+    	    Log("Deleting " + path3);
+    	    std::filesystem::remove(path3);
+		    count++;
+        }
+
+        if (std::filesystem::exists(path4))
+        {
+    	    Log("Deleting " + path4);
+    	    std::filesystem::remove(path4);
+            count++;
+        }
+
+        if (count > 0)
+            Log("Wiped mods!");
+        else
+            Log("Nothing found to wipe! Was bepinex installed?");
+    }
+
+    void OpenDirectory(std::string dir) 
+    {
+        std::string command = "explorer \"" + dir + "\" 2>&1";
+
+        FILE* pipe = _popen(command.c_str(), "r");
+        if (!pipe) {
+            Log("Error: Unable to open pipe.");
+            return;
+        }
+
+        char buffer[128];
+        while (fgets(buffer, 128, pipe) != NULL) {
+            Log(buffer);
+        }
+
+        _pclose(pipe);
     }
 };
 
@@ -433,6 +603,20 @@ void WipeLog()
     }
 }
 
+bool IsBepinexInstalled(std::string dir)
+{
+    std::string path = dir + "/BepInEx";
+	if (std::filesystem::exists(path))
+	{
+    	Log("Passed Bepinex Check!");
+        return true;
+    }
+	
+    Log("BepInEx is not installed!");
+    return false;
+}
+
+
 #pragma endregion
 
 
@@ -489,7 +673,7 @@ int main()
         if (buttonExit.isClicked())
             window.close();
 
-        window.clear(sf::Color(10,10,10));
+        window.clear(sf::Color(20,20,20));
 
 #pragma region DRAWING
 
