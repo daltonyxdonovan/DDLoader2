@@ -139,7 +139,7 @@ public:
         state = DEFAULT;
     }
 
-    bool isClicked()
+    bool isClicked(sf::RenderWindow& window)
     {
         if (ticker == 0)
         {
@@ -432,8 +432,10 @@ public:
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
     }
 
-    void update(sf::Vector2i mousePosition)
+    void update(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
     {
+        if (locked)
+            return;
         if (!isModManagerOpen)
         {
             if (!isInstalled)
@@ -450,7 +452,7 @@ public:
 
             }
 
-            if (buttons[0]->isClicked())
+            if (buttons[0]->isClicked(window))
             {
                 Unzip("resources/bepinex/bepinex5.zip", currentWD.getString());
                 isInstalled = IsBepinexInstalled(currentWD.getString());
@@ -467,12 +469,12 @@ public:
                     this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
                 }
             }
-            else if (buttons[4]->isClicked())
+            else if (buttons[4]->isClicked(window))
             {
                 ChangeDirectories(pathChosen);
                 LockButtons();
             }
-            else if (buttons[1]->isClicked())
+            else if (buttons[1]->isClicked(window))
             {
                 Unzip("resources/bepinex/bepinex6.zip", currentWD.getString());
                 isInstalled = IsBepinexInstalled(currentWD.getString());
@@ -488,7 +490,7 @@ public:
                 }
             }
 
-            else if (buttons[2]->isClicked())
+            else if (buttons[2]->isClicked(window))
             {
                 WipeMods(currentWD.getString());
                 isInstalled = false;
@@ -503,14 +505,14 @@ public:
                 }
             }
 
-            else if (buttons[5]->isClicked())
+            else if (buttons[5]->isClicked(window))
             {
                 OpenDirectory(currentWD.getString());
                 buttons[5]->state = DEFAULT;
                 LockButtons();
             }
 
-            if (buttons[6]->isClicked())
+            if (buttons[6]->isClicked(window))
             {
                 isModManagerOpen = true;
                 buttons[6]->state = DEFAULT;
@@ -522,7 +524,7 @@ public:
             
             buttons[7]->update(mousePosition);
 
-            if (buttons[7]->isClicked())
+            if (buttons[7]->isClicked(window))
 			{
             	isModManagerOpen = false;
             	buttons[7]->state = DEFAULT;
@@ -533,18 +535,18 @@ public:
             for (int i = 0; i < mods.size();i++)
             {
                 mods[i]->update(mousePosition);
-                if (mods[i]->buttons[0]->isClicked())
+                if (mods[i]->buttons[0]->isClicked(window))
                 {
                     DisableMod(currentWD.getString(),mods[i]->name);
                     mods[i]->rect.setFillColor(sf::Color(0,96,96));
                     UpdateModlist(currentWD.getString());
                 }
-                else if (mods[i]->buttons[1]->isClicked())
+                else if (mods[i]->buttons[1]->isClicked(window))
 				{
                 	DeleteMod(currentWD.getString(),mods[i]->name);
                     UpdateModlist(currentWD.getString());
                 }
-                else if (mods[i]->buttons[2]->isClicked())
+                else if (mods[i]->buttons[2]->isClicked(window))
                 {
                 	EnableMod(currentWD.getString(),mods[i]->name);
                     mods[i]->rect.setFillColor(sf::Color(0,148,148));
@@ -971,6 +973,7 @@ const int height = 800;
 sf::Font font;
 sf::Text programTitle;
 sf::RectangleShape programTitlebar;
+bool locked = false;
 
 int main()
 {
@@ -1001,6 +1004,10 @@ int main()
 
     while (window.isOpen())
     {
+        if (!window.hasFocus())
+            locked = true;
+		else
+			locked = false;
         mousePosition = sf::Mouse::getPosition(window);
         sf::Event event;
 
@@ -1015,14 +1022,14 @@ int main()
             }
         }
 
-        if (buttonExit.isClicked())
+        if (buttonExit.isClicked(window) && !locked)
             window.close();
 
         window.clear(sf::Color(0,116,116));
 
 #pragma region DRAWING
 
-        ui.update(mousePosition);
+        ui.update(mousePosition, window, locked);
         ui.draw(window);
 
         window.draw(programTitlebar);
