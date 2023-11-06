@@ -973,14 +973,14 @@ const int height = 800;
 sf::Font font;
 sf::Text programTitle;
 sf::RectangleShape programTitlebar;
+sf::Vector2i mousePosition;
+std::vector<Game> games;
 bool locked = false;
 
 int main()
 {
 #pragma region INITIALIZATION / TITLEBAR
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
-    sf::Vector2i mousePosition;
-    std::vector<Game> games;
     font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
     programTitle.setFont(font);
     programTitle.setString("DDLOADER2");
