@@ -49,14 +49,6 @@ using json = nlohmann::json;
 
 enum ButtonState { HOVER, PRESSED, DEFAULT };
 
-class Mod
-{
-public:
-    std::string name;
-    bool isDisabled;
-
-    Mod(const std::string& name, bool isDisabled) : name(name), isDisabled(isDisabled) {}
-};
 
 class Game
 {
@@ -198,6 +190,62 @@ public:
     }
 };
 
+class Mod
+{
+public:
+    std::string name;
+    bool isDisabled;
+    sf::RectangleShape rect;
+    sf::Text text;
+    sf::Font font;
+    std::vector<Button*> buttons;
+    sf::Vector2f position;
+
+    Mod(const std::string& name, bool isDisabled, sf::Vector2f position) : name(name), isDisabled(isDisabled), position(position)
+    {
+        this->rect = sf::RectangleShape();
+		this->text = sf::Text();
+		this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
+		this->text.setFont(font);
+		this->text.setString(name);
+		this->text.setCharacterSize(15);
+		this->text.setFillColor(sf::Color::Black);
+		this->text.setStyle(sf::Text::Bold);
+		this->rect.setSize(sf::Vector2f(780, 40));
+		this->rect.setFillColor(sf::Color(0,148,148));
+		this->rect.setOutlineThickness(1);
+		this->rect.setOutlineColor(sf::Color::Black);
+		this->text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
+		this->text.setPosition(sf::Vector2f(position.x-200,position.y));
+		this->rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
+		this->rect.setPosition(sf::Vector2f(position.x,position.y));
+		this->buttons.push_back(new Button("DELETE", sf::Vector2f(position.x+345,position.y)));
+        this->buttons.push_back(new Button("DISABLE", sf::Vector2f(position.x+260,position.y)));
+
+    }
+
+    ~Mod()
+    {
+    	for (auto& button : buttons)
+    		delete button;
+    }
+
+    void update(sf::Vector2i mousePosition)
+	{
+    	for (auto& button : buttons)
+    		button->update(mousePosition);
+    }
+
+    void draw(sf::RenderWindow& window)
+    {
+        window.draw(rect);
+		window.draw(text);
+		for (auto& button : buttons)
+			button->draw(window);
+    }
+    
+};
+
 class UI
 {
 public:
@@ -218,7 +266,8 @@ public:
     sf::Texture image;
     sf::Texture darkener;
     bool isModManagerOpen = false;
-    std::vector<Mod> mods;
+    std::vector<std::unique_ptr<Mod>> mods;
+    int modUpdateTicker = 0;
     
     
     /*
@@ -235,8 +284,9 @@ public:
 
     UI(std::vector<Game> games)
     {
+#pragma UIINIT
         buttons = std::vector<Button*>();
-        mods = std::vector<Mod>();
+        mods = std::vector<std::unique_ptr<Mod>>();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
         this->title.setFont(font);
         this->description.setFont(font);
@@ -325,6 +375,9 @@ public:
         this->darkenerArea.setPosition(400,150);
         this->darkenerArea.setOutlineColor(sf::Color::Black);
         this->darkenerArea.setOutlineThickness(1);
+
+#pragma endregion
+        UpdateModlist(currentWD.getString());
     }
 
     ~UI() 
@@ -333,6 +386,7 @@ public:
         {
             delete button;
         }
+
     }
 
     void set(Game game)
@@ -429,6 +483,15 @@ public:
         }
         else
         {
+            if (modUpdateTicker > 0)
+			{
+            	modUpdateTicker--;
+            }
+			else
+			{
+            	UpdateModlist(currentWD.getString());
+            	modUpdateTicker = 60;
+            }
             buttons[7]->update(mousePosition);
 
             if (buttons[7]->isClicked())
@@ -436,6 +499,11 @@ public:
             	isModManagerOpen = false;
             	buttons[7]->state = DEFAULT;
             	LockButtons();
+            }
+
+            for (int i = 0; i < mods.size();i++)
+            {
+                mods[i]->update(mousePosition);
             }
         }
     }
@@ -470,25 +538,26 @@ public:
         return false;
     }
 
-    void UpdateModlist(std::string dir)
-	{
-    	std::string path = dir + "/BepInEx/plugins";
-		if (std::filesystem::exists(path))
-		{
-            for (const auto& entry : std::filesystem::directory_iterator(path))
-        	{
+    void UpdateModlist(std::string dir) 
+    {
+        mods.clear(); // Clear existing mods
+
+        int i = 0;
+        std::string path = dir + "/BepInEx/plugins";
+        if (std::filesystem::exists(path)) 
+        {
+            for (const auto& entry : std::filesystem::directory_iterator(path)) 
+            {
                 std::string modName = entry.path().string();
                 modName = modName.substr(modName.find_last_of("/\\") + 1);
-                if (modName != "doorstop_config.ini")
+                if (modName != "doorstop_config.ini") 
                 {
-                    Mod mod(modName, false);
-                    mods.push_back(mod);
+                    mods.emplace_back(std::make_unique<Mod>(modName, false, sf::Vector2f(400, 70 + (i * 30))));
+                    i++;
                 }
             }
         }
     }
-
-
 
     void draw(sf::RenderWindow& window)
 	{
@@ -516,8 +585,15 @@ public:
         }
         else
         {
+            
+
             window.draw(buttonArea);
             buttons[7]->draw(window);
+
+            for (int i = 0; i < mods.size();i++)
+            {
+                mods[i]->draw(window);
+            }
 
         }
     }
