@@ -292,19 +292,6 @@ public:
     std::string pathChosen = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wobbly Life";
     sf::Text noModsText;
     
-    
-    /*
-    0) install bepinex 5
-    1) install bepinex 6
-    2) wipe mods
-    3) play
-    4) change directory
-    5) open directory
-    6) mod manager
-    7) exit mod manager
-    */
-    
-
     UI(std::vector<Game> games)
     {
 #pragma UIINIT
@@ -366,6 +353,18 @@ public:
         this->platform.setPosition(100, 175);
         this->bepinexVersion.setPosition(400, 115);
 
+        /*
+                    0) install bepinex 5
+                    1) install bepinex 6
+                    2) wipe mods
+                    3) play
+                    4) change directory
+                    5) open directory
+                    6) mod manager
+                    7) exit mod manager
+                    8) install mod
+        */
+
         this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(206, 690)));
         buttons[0]->setSize(sf::Vector2f(370,180));
         this->buttons.push_back(new Button("Install BepInEx 6", sf::Vector2f(800-206, 690)));
@@ -379,8 +378,10 @@ public:
         buttons[5]->setSize(sf::Vector2f(760,30));
         this->buttons.push_back(new Button("Mod Manager", sf::Vector2f(800-206, 690)));
         buttons[6]->setSize(sf::Vector2f(370,180));
-        this->buttons.push_back(new Button("Exit Mod Manager", sf::Vector2f(400, 690)));
-        buttons[7]->setSize(sf::Vector2f(760,180));
+        this->buttons.push_back(new Button("Exit Mod Manager", sf::Vector2f(800-206, 690)));
+        buttons[7]->setSize(sf::Vector2f(370,180));
+        this->buttons.push_back(new Button("Install Mod", sf::Vector2f(206, 690)));
+        buttons[8]->setSize(sf::Vector2f(370,180));
 
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
@@ -467,6 +468,7 @@ public:
                     this->bepinexVersion.setFillColor(sf::Color::Green);
                     this->isInstalled = true;
                     this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+                    createPluginsFolder(currentWD.getString());
                 }
             }
             else if (buttons[4]->isClicked(window))
@@ -487,6 +489,7 @@ public:
                     this->bepinexVersion.setFillColor(sf::Color::Green);
                     this->isInstalled = true;
                     this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+                    createPluginsFolder(currentWD.getString());
                 }
             }
 
@@ -521,7 +524,7 @@ public:
         }
         else
         {
-            
+            buttons[8]->update(mousePosition);
             buttons[7]->update(mousePosition);
 
             if (buttons[7]->isClicked(window))
@@ -530,6 +533,14 @@ public:
             	buttons[7]->state = DEFAULT;
             	LockButtons();
                 UpdateModlist(currentWD.getString());
+            }
+
+            if (buttons[8]->isClicked(window))
+			{
+            	installMod(currentWD.getString());
+            	buttons[8]->state = DEFAULT;
+            	LockButtons();
+            	UpdateModlist(currentWD.getString());
             }
 
             for (int i = 0; i < mods.size();i++)
@@ -553,6 +564,47 @@ public:
                     UpdateModlist(currentWD.getString());
                 }
             }
+        }
+    }
+
+    void installMod(std::string dir) 
+    {
+        Log("Opening File Dialog...");
+
+        IFileOpenDialog* openFileDialog;
+        HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&openFileDialog));
+
+        if (SUCCEEDED(hr)) {
+            COMDLG_FILTERSPEC fileTypes[] = { L"ZIP Files", L"*.zip" };
+            openFileDialog->SetFileTypes(1, fileTypes);
+
+            hr = openFileDialog->Show(NULL);
+
+            if (SUCCEEDED(hr)) {
+                IShellItem* pItem;
+                hr = openFileDialog->GetResult(&pItem);
+
+                if (SUCCEEDED(hr)) {
+                    PWSTR filePath;
+                    hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
+
+                    if (SUCCEEDED(hr)) {
+                        // Convert LPWSTR to std::wstring
+                        std::wstring wstr(filePath);
+                        std::string zipFile(wstr.begin(), wstr.end());
+                        std::string modDir = dir + "\\BepInEx\\plugins";
+
+                        Log("Unzipping " + zipFile + " to " + modDir);
+                        Unzip(zipFile, modDir);
+
+                        CoTaskMemFree(filePath);
+                    }
+
+                    pItem->Release();
+                }
+            }
+
+            openFileDialog->Release();
         }
     }
 
@@ -704,6 +756,7 @@ public:
 
             window.draw(buttonArea);
             buttons[7]->draw(window);
+            buttons[8]->draw(window);
             
             if (mods.size() == 0)
                 window.draw(noModsText);
@@ -715,6 +768,21 @@ public:
                 }
             }
         }
+    }
+
+    void createPluginsFolder(std::string dir)
+    {
+        if (!std::filesystem::exists(dir + "/BepInEx"))
+		{
+            std::filesystem::create_directory(dir + "/BepInEx");
+            Log("Created BepInEx folder (Backup method of creation!)");
+        }
+        if (!std::filesystem::exists(dir + "/BepInEx/plugins"))
+        {
+        	std::filesystem::create_directory(dir + "/BepInEx/plugins");
+            Log("Created plugins folder");
+        }
+
     }
 
     void Unzip(std::string filePath, std::string dirToUnzipTo) 
