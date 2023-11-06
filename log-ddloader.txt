@@ -1,3 +1,5 @@
 Loaded assets for Wobbly Life
 Passed Bepinex Check!
+Enabling WobblyLife_ConsoleCommands.dll.ddloader
 Disabling WobblyLife_ConsoleCommands.dll
+Enabling WobblyLife_ConsoleCommands.dll.ddloader

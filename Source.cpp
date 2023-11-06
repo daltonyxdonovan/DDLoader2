@@ -934,6 +934,26 @@ public:
 
 };
 
+class Titlebar
+{
+public:
+    sf::Vector2f position;
+    sf::Vector2f size;
+    sf::Color color;
+    std::vector<Button*> buttons;
+    bool isHeld = false;
+
+    Titlebar(sf::Vector2f position, sf::Vector2f size, sf::Color)
+    {
+        this->position = position;
+        this->size = size;
+        this->color = color;
+        this->buttons.push_back(new Button("x", sf::Vector2f(position.x+260,position.y)));
+        this->buttons.push_back(new Button("#", sf::Vector2f(position.x-260,position.y)))
+    }
+    
+};
+
 #pragma endregion
 
 
