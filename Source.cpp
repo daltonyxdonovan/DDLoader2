@@ -190,6 +190,11 @@ public:
         this->rect.setSize(size);
         rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
     }
+
+    sf::Vector2f getSize()
+    {
+        return rect.getSize();
+    }
 };
 
 class Mod
@@ -942,14 +947,68 @@ public:
     sf::Color color;
     std::vector<Button*> buttons;
     bool isHeld = false;
+    sf::RectangleShape rect;
+    sf::Font font;
+    sf::Text title;
 
-    Titlebar(sf::Vector2f position, sf::Vector2f size, sf::Color)
+
+    Titlebar(sf::Vector2f position, sf::Vector2f size, sf::Color color)
     {
         this->position = position;
         this->size = size;
         this->color = color;
-        this->buttons.push_back(new Button("x", sf::Vector2f(position.x+260,position.y)));
-        this->buttons.push_back(new Button("#", sf::Vector2f(position.x-260,position.y)))
+        buttons = std::vector<Button*>();
+        this->isHeld = false;
+        this->rect.setSize(size);
+        this->rect.setFillColor(color);
+        this->rect.setOutlineColor(sf::Color::Black);
+        this->rect.setOutlineThickness(1);
+        this->rect.setOrigin(this->rect.getGlobalBounds().width/2,this->rect.getGlobalBounds().height/2);
+        this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
+        this->title.setString("DDLOADER2");
+        this->title.setFillColor(sf::Color::Black);
+        this->title.setCharacterSize(25);
+        this->title.setFont(font);
+        this->title.setOrigin(this->title.getGlobalBounds().width/2,this->title.getGlobalBounds().height/2+5);
+        this->title.setPosition(position);
+        this->rect.setPosition(position);
+        this->buttons.push_back(new Button("x", sf::Vector2f(position.x+380,position.y)));
+        this->buttons.push_back(new Button("+", sf::Vector2f(position.x-380,position.y)));
+        this->buttons[1]->setSize(this->buttons[0]->getSize());
+    }
+
+    void LockButtons()
+    {
+        buttons[0]->ticker = 60;
+        buttons[1]->ticker = 60;
+        buttons[0]->state = DEFAULT;
+        buttons[1]->state = DEFAULT;
+    }
+
+    void update(sf::Vector2i mousePosition, sf::RenderWindow& window, bool& isSettingsOpen)
+    {
+        buttons[0]->update(mousePosition);
+        buttons[1]->update(mousePosition);
+
+        if (buttons[0]->isClicked(window))
+        {
+            window.close();
+        }
+
+        if (buttons[1]->isClicked(window))
+        {
+            isSettingsOpen = !isSettingsOpen;
+            LockButtons();
+        }
+    }
+
+    void draw(sf::RenderWindow& window)
+    {
+        window.draw(rect);
+        window.draw(title);
+    
+        buttons[0]->draw(window);
+        buttons[1]->draw(window);
     }
     
 };
@@ -1064,27 +1123,15 @@ sf::RectangleShape programTitlebar;
 sf::Vector2i mousePosition;
 std::vector<Game> games;
 bool locked = false;
+bool isSettingsOpen = false;
 
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
-    font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
-    programTitle.setFont(font);
-    programTitle.setString("DDLOADER2");
-    programTitle.setCharacterSize(24);
-    programTitle.setFillColor(sf::Color::Black);
-    programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
-    programTitle.setPosition(width / 2, 15);
-    programTitlebar.setSize(sf::Vector2f(width, 40));
-    programTitlebar.setFillColor(sf::Color(0, 148, 148));
-    programTitlebar.setPosition(0, 0);
-    programTitlebar.setOutlineColor(sf::Color::Black);
-    programTitlebar.setOutlineThickness(1);
-
     WipeLog();
     LoadGames(games);
     UI ui(games);
-    Button buttonExit("x", sf::Vector2f(width-20,20)); //I hate the windows title bars man, they're ugly as hell. we will just use our own, thanks
+    Titlebar titleBar(sf::Vector2f(400,20), sf::Vector2f(800,40), sf::Color(0,148,148));
 
     while (window.isOpen())
     {
@@ -1092,6 +1139,7 @@ int main()
             locked = true;
 		else
 			locked = false;
+
         mousePosition = sf::Mouse::getPosition(window);
         sf::Event event;
 
@@ -1099,26 +1147,15 @@ int main()
         {
             if (event.type == sf::Event::Closed)
                 window.close();
-            if (event.type == sf::Event::KeyPressed)
-            {
-                if (event.key.code == sf::Keyboard::Escape)
-                    window.close();
-            }
         }
-
-        if (buttonExit.isClicked(window) && !locked)
-            window.close();
 
         window.clear(sf::Color(0,116,116));
 
         ui.update(mousePosition, window, locked);
         ui.draw(window);
 
-        window.draw(programTitlebar);
-        window.draw(programTitle);
-
-        buttonExit.update(mousePosition);
-        buttonExit.draw(window);
+        titleBar.update(mousePosition, window, isSettingsOpen);
+        titleBar.draw(window);
 
         window.setFramerateLimit(30);
         window.display();
