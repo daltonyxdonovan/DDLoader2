@@ -49,6 +49,15 @@ using json = nlohmann::json;
 
 enum ButtonState { HOVER, PRESSED, DEFAULT };
 
+class Mod
+{
+public:
+    std::string name;
+    bool isDisabled;
+
+    Mod(const std::string& name, bool isDisabled) : name(name), isDisabled(isDisabled) {}
+};
+
 class Game
 {
 public:
@@ -58,15 +67,12 @@ public:
     std::string platform;
     std::string installLocation;
     std::string bepinexVersion;
+    sf::Texture image;
 
-    Game(std::string name, std::string description, std::string genre, std::string platform, std::string installLocation, std::string bepinexVersion)
-	{
-    	this->name = name;
-    	this->description = description;
-    	this->genre = genre;
-    	this->platform = platform;
-    	this->installLocation = installLocation;
-    	this->bepinexVersion = bepinexVersion;
+    Game(const std::string& name, const std::string& description, const std::string& genre, const std::string& platform, const std::string& installLocation, const std::string& bepinexVersion, const sf::Texture& image)
+        : name(name), description(description), genre(genre), platform(platform), installLocation(installLocation), bepinexVersion(bepinexVersion), image(image) 
+    {
+        //screw you, textures. we'll just load you directly -_-
     }
 
     void print()
@@ -155,15 +161,15 @@ public:
             ticker--;
         if (state == HOVER)
 		{
-        	rect.setFillColor(sf::Color(150,150,150));
+        	rect.setFillColor(sf::Color(0, 241, 241));
         }
 		else if (state == PRESSED)
 		{
-        	rect.setFillColor(sf::Color(170,170,170));
+        	rect.setFillColor(sf::Color(0, 214, 214));
         }
 		else
 		{
-        	rect.setFillColor(sf::Color(80,80,80));
+        	rect.setFillColor(sf::Color(0, 180, 180));
         }
 
         if (rect.getGlobalBounds().contains(mousePosition.x,mousePosition.y))
@@ -203,11 +209,18 @@ public:
     sf::Text bepinexVersion;
     sf::Text isBepinexInstalled;
     sf::RectangleShape displayArea;
+    sf::RectangleShape darkenerArea;
     sf::RectangleShape buttonArea;
     sf::Text currentWD;
     bool isInstalled;
     std::string bepInstalled = "";
     std::vector<Button*> buttons;
+    sf::Texture image;
+    sf::Texture darkener;
+    bool isModManagerOpen = false;
+    std::vector<Mod> mods;
+    
+    
     /*
     1) install bepinex 5
     2) install bepinex 6
@@ -215,12 +228,15 @@ public:
     4) play
     5) change directory
     6) open directory
+    7) mod manager
+    8) exit mod manager
     */
     
 
     UI(std::vector<Game> games)
     {
         buttons = std::vector<Button*>();
+        mods = std::vector<Mod>();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
         this->title.setFont(font);
         this->description.setFont(font);
@@ -232,6 +248,7 @@ public:
         this->genre.setString(games[0].genre);
         this->platform.setString(games[0].platform);
         this->bepinexVersion.setFillColor(sf::Color::Red);
+        this->bepinexVersion.setStyle(sf::Text::Bold);
         bepInstalled = "FALSE";
         this->isInstalled = false;
         if (IsBepinexInstalled(games[0].installLocation))
@@ -244,7 +261,7 @@ public:
         this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
         this->currentWD.setString(games[0].installLocation);
         this->currentWD.setFillColor(sf::Color::White);
-        this->currentWD.setCharacterSize(10);
+        this->currentWD.setCharacterSize(13);
         this->currentWD.setStyle(sf::Text::Bold);
         this->currentWD.setPosition(sf::Vector2f(400, 525));
         this->currentWD.setFont(font);
@@ -253,7 +270,7 @@ public:
         this->description.setCharacterSize(10);
         this->genre.setCharacterSize(15);
         this->platform.setCharacterSize(15);
-        this->bepinexVersion.setCharacterSize(10);
+        this->bepinexVersion.setCharacterSize(13);
         this->title.setOutlineColor(sf::Color::Black);
         this->title.setOutlineThickness(1);
         this->title.setFillColor(sf::Color::White);
@@ -281,19 +298,33 @@ public:
         buttons[4]->setSize(sf::Vector2f(760,30));
         this->buttons.push_back(new Button("Open Directory", sf::Vector2f(400, 555)));
         buttons[5]->setSize(sf::Vector2f(760,30));
+        this->buttons.push_back(new Button("Mod Manager", sf::Vector2f(800-206, 690)));
+        buttons[6]->setSize(sf::Vector2f(370,180));
+        this->buttons.push_back(new Button("Exit Mod Manager", sf::Vector2f(400, 690)));
+        buttons[7]->setSize(sf::Vector2f(760,180));
 
-        this->buttonArea.setFillColor(sf::Color(30,30,30));
+        this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
         this->buttonArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
         this->buttonArea.setPosition(400,690);
         this->buttonArea.setOutlineColor(sf::Color::Black);
         this->buttonArea.setOutlineThickness(1);
-        this->displayArea.setFillColor(sf::Color(30,30,30));
+        this->displayArea.setFillColor(sf::Color::White);
+        image.loadFromFile("resources/images/game0.png");
+        this->displayArea.setTexture(&image);
         this->displayArea.setSize(sf::Vector2f(780,530));
         this->displayArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
         this->displayArea.setPosition(400,150);
         this->displayArea.setOutlineColor(sf::Color::Black);
         this->displayArea.setOutlineThickness(1);
+        
+        this->darkener.loadFromFile("resources/images/darker.png");
+        this->darkenerArea.setTexture(&darkener);
+        this->darkenerArea.setSize(sf::Vector2f(780,530));
+        this->darkenerArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
+        this->darkenerArea.setPosition(400,150);
+        this->darkenerArea.setOutlineColor(sf::Color::Black);
+        this->darkenerArea.setOutlineThickness(1);
     }
 
     ~UI() 
@@ -318,94 +349,176 @@ public:
 
     void update(sf::Vector2i mousePosition)
     {
-        if (!isInstalled)
+        if (!isModManagerOpen)
         {
-            buttons[0]->update(mousePosition);
-            buttons[1]->update(mousePosition);
-            buttons[4]->update(mousePosition);
+            if (!isInstalled)
+            {
+                buttons[0]->update(mousePosition);
+                buttons[1]->update(mousePosition);
+                buttons[4]->update(mousePosition);
+            }
+            else
+            {
+                buttons[2]->update(mousePosition);
+                buttons[5]->update(mousePosition);
+                buttons[6]->update(mousePosition);
+
+            }
+
+            if (buttons[0]->isClicked())
+            {
+                Unzip("resources/bepinex/bepinex5.zip", currentWD.getString());
+                isInstalled = IsBepinexInstalled(currentWD.getString());
+                buttons[0]->state = DEFAULT;
+                buttons[1]->state = DEFAULT;
+
+                LockButtons();
+                
+                if (IsBepinexInstalled(currentWD.getString()))
+                {
+                    bepInstalled = "TRUE";
+                    this->bepinexVersion.setFillColor(sf::Color::Green);
+                    this->isInstalled = true;
+                    this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+                }
+            }
+            if (buttons[1]->isClicked())
+            {
+                Unzip("resources/bepinex/bepinex6.zip", currentWD.getString());
+                isInstalled = IsBepinexInstalled(currentWD.getString());
+                buttons[0]->state = DEFAULT;
+                buttons[1]->state = DEFAULT;
+                LockButtons();
+                if (IsBepinexInstalled(currentWD.getString()))
+                {
+                    bepInstalled = "TRUE";
+                    this->bepinexVersion.setFillColor(sf::Color::Green);
+                    this->isInstalled = true;
+                    this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+                }
+            }
+
+            if (buttons[2]->isClicked())
+            {
+                WipeMods(currentWD.getString());
+                isInstalled = false;
+                buttons[2]->state = DEFAULT;
+                LockButtons();
+                if (!IsBepinexInstalled(currentWD.getString()))
+                {
+                    bepInstalled = "FALSE";
+                    this->bepinexVersion.setFillColor(sf::Color::Red);
+                    this->isInstalled = false;
+                    this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+                }
+            }
+
+            if (buttons[5]->isClicked())
+            {
+                OpenDirectory(currentWD.getString());
+                buttons[5]->state = DEFAULT;
+                LockButtons();
+            }
+
+            if (buttons[6]->isClicked())
+            {
+                isModManagerOpen = true;
+                buttons[6]->state = DEFAULT;
+                LockButtons();
+            }
         }
         else
         {
-            buttons[2]->update(mousePosition);
-            buttons[3]->update(mousePosition);
-            buttons[5]->update(mousePosition);
-            
-        }
+            buttons[7]->update(mousePosition);
 
-        if (buttons[0]->isClicked())
-        {
-            Unzip("resources/bepinex/bepinex5.zip", currentWD.getString());
-        	isInstalled = IsBepinexInstalled(currentWD.getString());
-            buttons[0]->state = DEFAULT;
-            buttons[1]->state = DEFAULT;
-            buttons[0]->ticker = 30;
-            buttons[1]->ticker = 30;
-            if (IsBepinexInstalled(currentWD.getString()))
-            {
-                bepInstalled = "TRUE";
-                this->bepinexVersion.setFillColor(sf::Color::Green);
-                this->isInstalled = true;
-                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            if (buttons[7]->isClicked())
+			{
+            	isModManagerOpen = false;
+            	buttons[7]->state = DEFAULT;
+            	LockButtons();
             }
-        }
-        if (buttons[1]->isClicked())
-		{
-            Unzip("resources/bepinex/bepinex6.zip", currentWD.getString());
-        	isInstalled = IsBepinexInstalled(currentWD.getString());
-        	buttons[0]->state = DEFAULT;
-        	buttons[1]->state = DEFAULT;
-        	buttons[0]->ticker = 30;
-        	buttons[1]->ticker = 30;
-            if (IsBepinexInstalled(currentWD.getString()))
-            {
-                bepInstalled = "TRUE";
-                this->bepinexVersion.setFillColor(sf::Color::Green);
-                this->isInstalled = true;
-                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
-            }
-        }
-
-        if (buttons[2]->isClicked())
-        {
-            WipeMods(currentWD.getString());
-            isInstalled = false;
-            buttons[2]->state = DEFAULT;
-            buttons[2]->ticker = 30;
-            if (!IsBepinexInstalled(currentWD.getString()))
-            {
-                bepInstalled = "FALSE";
-                this->bepinexVersion.setFillColor(sf::Color::Red);
-                this->isInstalled = false;
-                this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
-            }
-        }
-
-        if (buttons[5]->isClicked())
-		{
-        	OpenDirectory(currentWD.getString());
-        	buttons[5]->state = DEFAULT;
-        	buttons[5]->ticker = 30;
         }
     }
 
+    void LockButtons()
+    {
+        buttons[0]->ticker = 30;
+        buttons[1]->ticker = 30;
+        buttons[2]->ticker = 30;
+        buttons[3]->ticker = 30;
+        buttons[4]->ticker = 30;
+        buttons[5]->ticker = 30;
+        buttons[6]->ticker = 30;
+        buttons[7]->ticker = 30;
+    }
+
+    bool HasMods(std::string dir)
+    {
+        std::string path = dir + "/BepInEx/plugins";
+		if (std::filesystem::exists(path))
+		{
+            for (const auto& entry : std::filesystem::directory_iterator(path))
+        	{
+                std::string modName = entry.path().string();
+                modName = modName.substr(modName.find_last_of("/\\") + 1);
+                if (modName != "doorstop_config.ini")
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    void UpdateModlist(std::string dir)
+	{
+    	std::string path = dir + "/BepInEx/plugins";
+		if (std::filesystem::exists(path))
+		{
+            for (const auto& entry : std::filesystem::directory_iterator(path))
+        	{
+                std::string modName = entry.path().string();
+                modName = modName.substr(modName.find_last_of("/\\") + 1);
+                if (modName != "doorstop_config.ini")
+                {
+                    Mod mod(modName, false);
+                    mods.push_back(mod);
+                }
+            }
+        }
+    }
+
+
+
     void draw(sf::RenderWindow& window)
 	{
-        window.draw(buttonArea);
-        window.draw(displayArea);
-        window.draw(title);
-    	window.draw(bepinexVersion);
-        window.draw(currentWD);
-
-        if (!isInstalled)
+        if (!isModManagerOpen)
         {
-            buttons[0]->draw(window);
-            buttons[1]->draw(window);
-            buttons[4]->draw(window);
-		}
-		else
-		{
-			buttons[2]->draw(window);
-            buttons[5]->draw(window);
+            window.draw(buttonArea);
+            window.draw(displayArea);
+            window.draw(darkenerArea);
+            window.draw(title);
+            window.draw(bepinexVersion);
+            window.draw(currentWD);
+
+            if (!isInstalled)
+            {
+                buttons[0]->draw(window);
+                buttons[1]->draw(window);
+                buttons[4]->draw(window);
+            }
+            else
+            {
+                buttons[2]->draw(window);
+                buttons[5]->draw(window);
+                buttons[6]->draw(window);
+            }
+        }
+        else
+        {
+            window.draw(buttonArea);
+            buttons[7]->draw(window);
+
         }
     }
 
@@ -557,6 +670,7 @@ void LoadGames(std::vector<Game>& games)
 {
     std::string path = "resources/games/";
     std::string extension = ".json";
+    std::string pathImage = "resources/images/";
 
     for (int i = 0; i < CountFilesInDir(path); i++) 
     {
@@ -574,9 +688,14 @@ void LoadGames(std::vector<Game>& games)
             std::string genreToUse = j["genre"];
             std::string platformToUse = j["platform"];
             std::string installLocation = j["installLocation"];
+            sf::Texture image;
+
+            std::string imagePath = pathImage + "game" + std::to_string(i) + ".png";
+            image.loadFromFile(imagePath);
+
             std::string bepinexVersionToUse = j["bepinexVersion"];
 
-            Game game(nameToUse, descriptionToUse, genreToUse, platformToUse, installLocation, bepinexVersionToUse);
+            Game game(nameToUse, descriptionToUse, genreToUse, platformToUse, installLocation, bepinexVersionToUse, image);
 
             games.push_back(game);
             file.close();
@@ -641,7 +760,7 @@ int main()
     programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
     programTitle.setPosition(width / 2, 15);
     programTitlebar.setSize(sf::Vector2f(width, 40));
-    programTitlebar.setFillColor(sf::Color(30, 30, 30, 255));
+    programTitlebar.setFillColor(sf::Color(0, 148, 148));
     programTitlebar.setPosition(0, 0);
     programTitlebar.setOutlineColor(sf::Color::Black);
     programTitlebar.setOutlineThickness(1);
@@ -673,7 +792,7 @@ int main()
         if (buttonExit.isClicked())
             window.close();
 
-        window.clear(sf::Color(20,20,20));
+        window.clear(sf::Color(0,116,116));
 
 #pragma region DRAWING
 

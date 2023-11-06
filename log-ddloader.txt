@@ -12,3 +12,27 @@ Attempting unzipping of resources/bepinex/bepinex6.zip to C:\Program Files (x86)
 
 Passed Bepinex Check!
 Passed Bepinex Check!
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/BepInEx
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/doorstop_config.ini
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/winhttp.dll
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/changelog.txt
+Wiped mods!
+BepInEx is not installed!
+Attempting unzipping of resources/bepinex/bepinex6.zip to C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life
+[PIPE]:
+
+
+Passed Bepinex Check!
+Passed Bepinex Check!
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/BepInEx
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/doorstop_config.ini
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/winhttp.dll
+Deleting C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life/changelog.txt
+Wiped mods!
+BepInEx is not installed!
+Attempting unzipping of resources/bepinex/bepinex6.zip to C:\Program Files (x86)\Steam\steamapps\common\Wobbly Life
+[PIPE]:
+
+
+Passed Bepinex Check!
+Passed Bepinex Check!
