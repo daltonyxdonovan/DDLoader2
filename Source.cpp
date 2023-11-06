@@ -979,7 +979,6 @@ bool locked = false;
 
 int main()
 {
-#pragma region INITIALIZATION / TITLEBAR
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
     font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
     programTitle.setFont(font);
@@ -993,9 +992,6 @@ int main()
     programTitlebar.setPosition(0, 0);
     programTitlebar.setOutlineColor(sf::Color::Black);
     programTitlebar.setOutlineThickness(1);
-
-
-#pragma endregion
 
     WipeLog();
     LoadGames(games);
@@ -1027,8 +1023,6 @@ int main()
 
         window.clear(sf::Color(0,116,116));
 
-#pragma region DRAWING
-
         ui.update(mousePosition, window, locked);
         ui.draw(window);
 
@@ -1038,7 +1032,6 @@ int main()
         buttonExit.update(mousePosition);
         buttonExit.draw(window);
 
-#pragma endregion
         window.setFramerateLimit(30);
         window.display();
     }
