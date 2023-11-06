@@ -141,10 +141,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Button.cpp" />
+    <ClCompile Include="ButtonState.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Mod.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Titlebar.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="wobblyLife.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Button.h" />
+    <ClInclude Include="ButtonState.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Mod.h" />
+    <ClInclude Include="Titlebar.h" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
