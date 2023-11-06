@@ -1,8 +1,8 @@
 {
-	"name": "Wobbly Life",
-	"description": "Wobbly Life is a lively open world physics based sandbox.\nExplore Wobbly Island with your friends, discover fun locations. Be a hard working Wobbly and work\naround town in various jobs to earn cash to purchase/customize your clothes and vehicles.\nEven save up and buy a house!",
-	"genre": "Simulation",
-	"platform": "PC",
-	"installLocation": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wobbly Life",
-	"bepinexVersion": "56"
+    "bepinexVersion": "56",
+    "description": "Wobbly Life is a lively open world physics based sandbox.\nExplore Wobbly Island with your friends, discover fun locations. Be a hard working Wobbly and work\naround town in various jobs to earn cash to purchase/customize your clothes and vehicles.\nEven save up and buy a house!",
+    "genre": "Simulation",
+    "installLocation": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wobbly Life",
+    "name": "Wobbly Life",
+    "platform": "PC"
 }

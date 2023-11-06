@@ -43,6 +43,8 @@
 #include <cstdlib>
 #include <string>
 #include "json.hpp"
+#include <Windows.h>
+#include <ShlObj.h>
 using json = nlohmann::json;
 
 #pragma region CLASSES/ENUM
@@ -215,13 +217,14 @@ public:
 		this->rect.setFillColor(sf::Color(0,148,148));
 		this->rect.setOutlineThickness(1);
 		this->rect.setOutlineColor(sf::Color::Black);
-		this->text.setOrigin(text.getLocalBounds().left + text.getLocalBounds().width / 2.0f, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
-		this->text.setPosition(sf::Vector2f(position.x-200,position.y));
+		this->text.setOrigin(0, text.getLocalBounds().top + text.getLocalBounds().height / 2.0f);
+		this->text.setPosition(sf::Vector2f(position.x-365,position.y));
 		this->rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
 		this->rect.setPosition(sf::Vector2f(position.x,position.y));
-		this->buttons.push_back(new Button("DELETE", sf::Vector2f(position.x+345,position.y)));
         this->buttons.push_back(new Button("DISABLE", sf::Vector2f(position.x+260,position.y)));
-
+		this->buttons.push_back(new Button("DELETE", sf::Vector2f(position.x+345,position.y)));
+        this->buttons.push_back(new Button("ENABLE", sf::Vector2f(position.x+260,position.y)));
+        
     }
 
     ~Mod()
@@ -232,16 +235,33 @@ public:
 
     void update(sf::Vector2i mousePosition)
 	{
-    	for (auto& button : buttons)
-    		button->update(mousePosition);
+        if (isEnabled())
+            rect.setFillColor(sf::Color(0,148,148));
+        else
+            rect.setFillColor(sf::Color(0,96,96));
+
+    	buttons[1]->update(mousePosition);
+        if (isEnabled())
+			buttons[0]->update(mousePosition);
+		else
+			buttons[2]->update(mousePosition);
     }
 
     void draw(sf::RenderWindow& window)
     {
         window.draw(rect);
 		window.draw(text);
-		for (auto& button : buttons)
-			button->draw(window);
+		buttons[1]->draw(window);
+        if (isEnabled())
+            buttons[0]->draw(window);
+        else
+            buttons[2]->draw(window);
+    }
+
+    bool isEnabled()
+    {
+        //return true if name ends in '.ddloader'
+        return name.substr(name.length()-9,9) != ".ddloader";
     }
     
 };
@@ -268,23 +288,32 @@ public:
     bool isModManagerOpen = false;
     std::vector<std::unique_ptr<Mod>> mods;
     int modUpdateTicker = 0;
+    int gameIndex = 0;
+    std::string pathChosen = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wobbly Life";
+    sf::Text noModsText;
     
     
     /*
-    1) install bepinex 5
-    2) install bepinex 6
-    3) wipe mods
-    4) play
-    5) change directory
-    6) open directory
-    7) mod manager
-    8) exit mod manager
+    0) install bepinex 5
+    1) install bepinex 6
+    2) wipe mods
+    3) play
+    4) change directory
+    5) open directory
+    6) mod manager
+    7) exit mod manager
     */
     
 
     UI(std::vector<Game> games)
     {
 #pragma UIINIT
+        noModsText.setString("No mods found!");
+        noModsText.setFont(font);
+        noModsText.setCharacterSize(60);
+        noModsText.setFillColor(sf::Color(0,100,100));
+        noModsText.setStyle(sf::Text::Bold);
+        
         buttons = std::vector<Button*>();
         mods = std::vector<std::unique_ptr<Mod>>();
         this->font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
@@ -375,6 +404,8 @@ public:
         this->darkenerArea.setPosition(400,150);
         this->darkenerArea.setOutlineColor(sf::Color::Black);
         this->darkenerArea.setOutlineThickness(1);
+        noModsText.setOrigin(noModsText.getGlobalBounds().width/2,noModsText.getGlobalBounds().height/2);
+        noModsText.setPosition(sf::Vector2f(400,300));
 
 #pragma endregion
         UpdateModlist(currentWD.getString());
@@ -436,7 +467,12 @@ public:
                     this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
                 }
             }
-            if (buttons[1]->isClicked())
+            else if (buttons[4]->isClicked())
+            {
+                ChangeDirectories(pathChosen);
+                LockButtons();
+            }
+            else if (buttons[1]->isClicked())
             {
                 Unzip("resources/bepinex/bepinex6.zip", currentWD.getString());
                 isInstalled = IsBepinexInstalled(currentWD.getString());
@@ -452,7 +488,7 @@ public:
                 }
             }
 
-            if (buttons[2]->isClicked())
+            else if (buttons[2]->isClicked())
             {
                 WipeMods(currentWD.getString());
                 isInstalled = false;
@@ -467,7 +503,7 @@ public:
                 }
             }
 
-            if (buttons[5]->isClicked())
+            else if (buttons[5]->isClicked())
             {
                 OpenDirectory(currentWD.getString());
                 buttons[5]->state = DEFAULT;
@@ -483,15 +519,7 @@ public:
         }
         else
         {
-            if (modUpdateTicker > 0)
-			{
-            	modUpdateTicker--;
-            }
-			else
-			{
-            	UpdateModlist(currentWD.getString());
-            	modUpdateTicker = 60;
-            }
+            
             buttons[7]->update(mousePosition);
 
             if (buttons[7]->isClicked())
@@ -499,13 +527,98 @@ public:
             	isModManagerOpen = false;
             	buttons[7]->state = DEFAULT;
             	LockButtons();
+                UpdateModlist(currentWD.getString());
             }
 
             for (int i = 0; i < mods.size();i++)
             {
                 mods[i]->update(mousePosition);
+                if (mods[i]->buttons[0]->isClicked())
+                {
+                    DisableMod(currentWD.getString(),mods[i]->name);
+                    mods[i]->rect.setFillColor(sf::Color(0,96,96));
+                    UpdateModlist(currentWD.getString());
+                }
+                else if (mods[i]->buttons[1]->isClicked())
+				{
+                	DeleteMod(currentWD.getString(),mods[i]->name);
+                    UpdateModlist(currentWD.getString());
+                }
+                else if (mods[i]->buttons[2]->isClicked())
+                {
+                	EnableMod(currentWD.getString(),mods[i]->name);
+                    mods[i]->rect.setFillColor(sf::Color(0,148,148));
+                    UpdateModlist(currentWD.getString());
+                }
             }
         }
+    }
+
+    void ChangeDirectories(std::string& varToChange) 
+    {
+        Log("Opening Directory Browser...");
+        BROWSEINFOW browseInfo = { 0 };
+        wchar_t pathW[MAX_PATH];
+        browseInfo.hwndOwner = NULL;
+        browseInfo.pidlRoot = NULL;
+        browseInfo.pszDisplayName = pathW;
+        browseInfo.lpszTitle = L"Select a Directory";
+        browseInfo.ulFlags = BIF_RETURNONLYFSDIRS;
+
+        LPITEMIDLIST item = SHBrowseForFolderW(&browseInfo);
+        if (item != NULL) 
+        {
+            Log("Something was chosen, getting path...");
+            SHGetPathFromIDListW(item, pathW);
+
+            int length = WideCharToMultiByte(CP_UTF8, 0, pathW, -1, nullptr, 0, NULL, NULL);
+            std::string path(length, 0);
+            WideCharToMultiByte(CP_UTF8, 0, pathW, -1, &path[0], length, NULL, NULL);
+
+            // Remove any null characters from the string
+            path.erase(std::remove(path.begin(), path.end(), '\0'), path.end());
+
+            varToChange = path;
+            CoTaskMemFree(item);
+        }
+        else
+            return;
+
+        Log("Path chosen: " + varToChange);
+        ChangeDirectoryInJson(varToChange);  // Use the corrected path
+        currentWD.setString(varToChange);    // Use the corrected path
+
+        if (IsBepinexInstalled(currentWD.getString()))
+        {
+            bepInstalled = "TRUE";
+            this->bepinexVersion.setFillColor(sf::Color::Green);
+            this->isInstalled = true;
+            this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+        }
+        else
+        {
+            bepInstalled = "FALSE";
+            this->bepinexVersion.setFillColor(sf::Color::Red);
+            this->isInstalled = false;
+            this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+        }
+    }
+
+    void ChangeDirectoryInJson(std::string directoryChosen)
+	{
+        Log("Attempting to change directory in JSON to " + directoryChosen);
+
+        //get the json at the index chosen from /bepinex/games/ and use that for the json path
+        std::string jsonPath = "resources/games/game" + std::to_string(gameIndex) + ".json";
+
+        Log("JSON to change: " + jsonPath);
+
+    	std::ifstream file(jsonPath);
+    	json j;
+    	file >> j;
+    	j["installLocation"] = directoryChosen;
+    	std::ofstream o(jsonPath);
+    	o << std::setw(4) << j << std::endl;
     }
 
     void LockButtons()
@@ -552,7 +665,7 @@ public:
                 modName = modName.substr(modName.find_last_of("/\\") + 1);
                 if (modName != "doorstop_config.ini") 
                 {
-                    mods.emplace_back(std::make_unique<Mod>(modName, false, sf::Vector2f(400, 70 + (i * 30))));
+                    mods.emplace_back(std::make_unique<Mod>(modName, false, sf::Vector2f(400, 70 + (i * 50))));
                     i++;
                 }
             }
@@ -589,12 +702,16 @@ public:
 
             window.draw(buttonArea);
             buttons[7]->draw(window);
-
-            for (int i = 0; i < mods.size();i++)
+            
+            if (mods.size() == 0)
+                window.draw(noModsText);
+            else
             {
-                mods[i]->draw(window);
+                for (int i = 0; i < mods.size();i++)
+                {
+                    mods[i]->draw(window);
+                }
             }
-
         }
     }
 
@@ -712,6 +829,39 @@ public:
 
         _pclose(pipe);
     }
+
+    void DeleteMod(std::string dir, std::string modName) 
+	{
+    	std::string path = dir + "/BepInEx/plugins/" + modName;
+    	if (std::filesystem::exists(path))
+    	{
+            Log("Deleting " + path);
+            std::filesystem::remove(path);
+        }
+    }
+
+    void DisableMod(std::string dir, std::string modName) 
+    {
+        std::string path = dir + "/BepInEx/plugins/" + modName;
+        std::string disabledPath = path + ".ddloader";
+
+        if (std::filesystem::exists(path)) {
+            Log("Disabling " + modName);
+            std::filesystem::rename(path, disabledPath);
+        }
+    }
+
+    void EnableMod(std::string dir, std::string modName)
+    {
+        std::string path = dir + "/BepInEx/plugins/" + modName;
+        std::string enabledPath = path.substr(0, path.size() - 9);
+
+        if (std::filesystem::exists(path)) {
+            Log("Enabling " + modName);
+            std::filesystem::rename(path, enabledPath);
+        }
+    }
+
 };
 
 #pragma endregion
