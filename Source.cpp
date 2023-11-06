@@ -983,7 +983,7 @@ int main()
     std::vector<Game> games;
     font.loadFromFile("resources/fonts/JetBrainsMono-Regular.ttf");
     programTitle.setFont(font);
-    programTitle.setString("DDLOADER 2");
+    programTitle.setString("DDLOADER2");
     programTitle.setCharacterSize(24);
     programTitle.setFillColor(sf::Color::Black);
     programTitle.setOrigin((int)programTitle.getLocalBounds().width / 2, (int)programTitle.getLocalBounds().height / 2);
