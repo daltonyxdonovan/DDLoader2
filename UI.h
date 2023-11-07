@@ -161,8 +161,12 @@ public:
         this->buttons.push_back(new Button("GitHub", sf::Vector2f(800-206,530)));
         buttons[12]->setSize(sf::Vector2f(370,90));
 
-        this->buttons.push_back(new Button("GitHub", sf::Vector2f(400,530)));
-        buttons[13]->setSize(sf::Vector2f(780,90));
+        this->buttons.push_back(new Button("THANK YOU <3", sf::Vector2f(400, 455)));
+        buttons[13]->setSize(sf::Vector2f(760,30));
+
+        
+
+
 
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
@@ -553,12 +557,13 @@ public:
         }
     }
 
-    void updateSettings(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
+    void updateSettings(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked, bool& isSecretOpen)
     {
         buttons[9]->update(mousePosition);
         buttons[10]->update(mousePosition);
         buttons[11]->update(mousePosition);
         buttons[12]->update(mousePosition);
+        buttons[13]->update(mousePosition);
 
         if (buttons[9]->isClicked(window))
         {
@@ -587,6 +592,13 @@ public:
             buttons[12]->state = DEFAULT;
             LockButtons();
         }
+
+        else if (buttons[13]->isClicked(window))
+		{
+        	isSecretOpen = true;
+        	buttons[13]->state = DEFAULT;
+        	LockButtons();
+        }
     }
 
     void drawSettings(sf::RenderWindow& window)
@@ -597,6 +609,8 @@ public:
         buttons[10]->draw(window);
         buttons[11]->draw(window);
         buttons[12]->draw(window);
+        buttons[13]->draw(window);
+
 
     }
 

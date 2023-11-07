@@ -11,7 +11,6 @@
 
                   NOTES:
                     -This is a complete rewrite of the original LOAD-R (again)
-                    -Yes, all the classes are in the source file for now- I'm lazy
                     -Why does CountFilesInDir() run twice? Should look up quirks of cpp
                     -std::vector<> solves everything.
                     -Maybe I should add all the funky colours and switcher back?
@@ -48,6 +47,151 @@
 #include "json.hpp"
 
 using json = nlohmann::json;
+
+class Tester
+{
+public:
+    sf::RectangleShape rect;
+    sf::Text text;
+    std::string name;
+    sf::Vector2f position;
+    sf::Font* font;
+
+    Tester(std::string names, sf::Font* font, bool recognised)
+    {
+        this->name = names;
+        this->font = font;
+        this->position = sf::Vector2f((rand() % 200) + 300, -20);
+        this->text.setString(name);
+        this->text.setFillColor(sf::Color::Black);
+        this->text.setCharacterSize(25);
+        this->text.setFont(*this->font);
+        this->text.setOrigin(this->text.getGlobalBounds().width/2,this->text.getGlobalBounds().height/2+5);
+        this->text.setPosition(position);
+        this->rect = sf::RectangleShape(sf::Vector2f(this->text.getGlobalBounds().width+10, this->text.getGlobalBounds().height+10));
+        this->rect.setFillColor(sf::Color(0,148,148));
+        this->rect.setOrigin(this->rect.getGlobalBounds().width/2,this->rect.getGlobalBounds().height/2);
+        this->rect.setPosition(position);
+        this->rect.setOutlineThickness(2);
+        this->rect.setOutlineColor(sf::Color(0,100,100));
+
+        if (recognised)
+        {
+            this->rect.setOutlineColor(sf::Color(0,240,240));
+            this->rect.setFillColor(sf::Color(0,214,214));
+        }
+    }
+
+    void Update()
+	{
+    	this->position.y += 1;
+    	this->rect.setPosition(this->position);
+    	this->text.setPosition(this->position);
+    }
+
+    void Draw(sf::RenderWindow& window)
+	{
+        window.draw(this->rect);
+    	window.draw(this->text);
+    }
+
+    void Log(std::string text) 
+    {
+    
+        std::ofstream file("log-ddloader.txt", std::ios_base::app);
+        if (file.is_open()) 
+        {
+            file << text << std::endl;
+            file.close();
+            std::cout << "[LOG]: " << text << std::endl;
+        }
+        else 
+        {
+            std::cerr << "Error opening or creating log file!" << std::endl;
+        }
+    }
+
+};
+
+class Confetti
+{
+public:
+    sf::Vector2f position;
+    bool flip = false;
+    sf::RectangleShape rect;
+    sf::Color color;
+    sf::Texture* texture1;
+    sf::Texture* texture2;
+    int ticker = 0;
+    bool right;
+    int rightTicker;
+    float rotation = 0;
+
+    Confetti(sf::Vector2f position, sf::Texture* texture, sf::Texture* texture2, sf::Color color)
+	{
+    	this->position = position;
+    	this->color = sf::Color(rand()%255,rand()%255,rand()%255);
+    	this->rect = sf::RectangleShape(sf::Vector2f(50,50));
+    	this->rect.setFillColor(color);
+    	this->rect.setPosition(this->position);
+        this->texture1 = texture;
+        this->texture2 = texture2;
+        this->rect.setTexture(this->texture1);
+        this->rect.setOrigin(this->rect.getGlobalBounds().width/2,this->rect.getGlobalBounds().height/2);
+        this->right = rand()%2;
+        this->rightTicker = 0;
+    }
+
+    void Update()
+    {
+        ticker++;
+        if (ticker > 100)
+        {
+            flip = !flip;
+            if (flip)
+            {
+                this->rect.setTexture(this->texture2);
+            }
+            else
+            {
+                this->rect.setTexture(this->texture1);
+            }
+            ticker = 0;
+        }
+
+        rightTicker++;
+        if (rightTicker>100)
+        {
+            right = !right;
+			rightTicker = 0;
+        }
+
+        if (right)
+        {
+            position.x += .1f;
+            rotation+=3;
+
+        }
+        else
+        {
+            position.x -= .1f;
+            rotation-=3;
+        }
+
+
+
+        this->position.y += 5;
+        this->rect.setPosition(this->position);
+
+        this->rect.setRotation(rotation);
+    }
+
+    void Draw(sf::RenderWindow& window)
+    {
+        window.draw(this->rect);
+    }
+
+};
 
 #pragma region METHODS
 int CountFilesInDir(const std::string& path) 
@@ -156,14 +300,40 @@ sf::Vector2i mousePosition;
 std::vector<Game> games;
 bool locked = false;
 bool isSettingsOpen = false;
+std::vector<Tester> testers;
+bool isSecretOpen = false;
+int secretTicker = 0;
+int names1Ticker = 0;
+int names2Ticker = 0;
+bool flip = true;
+int count = 0;
+std::vector<Confetti> confetti;
+sf::Texture tex1;
+sf::Texture tex2;
+std::vector<std::string> recognised = { "CameraMan", "DHL Erzfeind", "latest_version", "Traube", "Wilde Pommes YT", "QuackAndCheese", "THANK YOU ALL SO MUCH <3", "FOR TESTING/BEING COOL/WHATEVER IT WAS!"};
+std::vector<std::string> testersn = { "Azurii", "Bill", "Blammo", "Cookie", "Dimi", "DomPaul11", "Memepoleon", "nico", "Pixel Yoshi", "PlushEdits(Backup)", "Speedy612", "TarikGamer7" };
+sf::Color color1 = sf::Color(217, 7, 24);
+sf::Color color2 = sf::Color(15, 140, 65);
+sf::Color color3 = sf::Color(43, 43, 128);
+sf::Color color4 = sf::Color(230, 205, 18);
+sf::RectangleShape shape1(sf::Vector2f(800,800));
+
+
 
 int main()
 {
+    shape1.setFillColor(sf::Color(0,0,0, 200));
+    shape1.setPosition(0,0);
+
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
+    font.loadFromFile("resources/fonts/monospace.ttf");
     WipeLog();
     LoadGames(games);
     UI ui(games);
     Titlebar titleBar(sf::Vector2f(400,20), sf::Vector2f(804,40), sf::Color(0,148,148));
+    srand(time(NULL));
+    tex1.loadFromFile("resources/images/confetti2.png");
+    tex2.loadFromFile("resources/images/confetti.png");
 
     while (window.isOpen())
     {
@@ -183,6 +353,62 @@ int main()
 
         window.clear(sf::Color(0,116,116));
 
+        if (isSecretOpen)
+        {
+            count++;
+
+
+            if (count%2 == 0)
+            {
+                int choice = rand() % 4;
+
+
+                if (choice == 0)
+                    confetti.push_back(Confetti(sf::Vector2f(rand() % 800, -20), &tex1, &tex2, color1));
+                else if (choice == 1)
+                    confetti.push_back(Confetti(sf::Vector2f(rand() % 800, -20), &tex2, &tex1, color2));
+                else if (choice == 2)
+                    confetti.push_back(Confetti(sf::Vector2f(rand() % 800, -20), &tex2, &tex2, color4));
+                else
+                    confetti.push_back(Confetti(sf::Vector2f(rand() % 800, -20), &tex1, &tex1, color3));
+
+
+            }
+
+            
+
+            
+            if (count > 2400)
+            {
+            	isSecretOpen = false;
+            	count = 0;
+                confetti.clear();
+                testers.clear();
+            }
+            if (secretTicker > 0)
+                secretTicker--;
+            if (secretTicker == 0)
+            {
+                secretTicker = 40;
+                if (flip)
+                {
+                	testers.push_back(Tester(recognised[names1Ticker], &font, true));
+                    names1Ticker++;
+                    if (names1Ticker> recognised.size()-1)
+						names1Ticker = 0;
+                    flip = !flip;
+                }
+				else
+				{
+                	testers.push_back(Tester(testersn[names2Ticker], &font, true));
+                    names2Ticker++;
+					if (names2Ticker> testersn.size()-1)
+                        names2Ticker = 0;
+                    flip = !flip;
+                }
+            }
+        }
+
         if (!isSettingsOpen)
         {
             ui.updateMain(mousePosition, window, locked);
@@ -190,14 +416,47 @@ int main()
         }
         else
         {
-            ui.updateSettings(mousePosition,window,locked);
+            ui.updateSettings(mousePosition,window,locked,isSecretOpen);
             ui.drawSettings(window);
+        }
+
+        if (isSecretOpen)
+        {
+            
+            window.draw(shape1);
+            for (int i = 0; i < confetti.size(); i++)
+            {
+                confetti[i].Draw(window);
+				confetti[i].Update();
+            }
+
+            for (int i = 0; i < testers.size(); i++)
+            {
+                testers[i].Draw(window);
+                testers[i].Update();
+            }
+        }
+
+        for (int i = 0; i < testers.size(); i++)
+        {
+            if (testers[i].position.y > 820)
+            {
+            	testers.erase(testers.begin() + i);
+            }
+        }
+
+        for (int i = 0; i < confetti.size(); i++)
+        {
+            if (confetti[i].position.y > 820)
+			{
+            	confetti.erase(confetti.begin() + i);
+            }
         }
 
         titleBar.update(mousePosition, window, isSettingsOpen);
         titleBar.draw(window);
 
-        window.setFramerateLimit(30);
+        window.setFramerateLimit(60);
         window.display();
     }
 
