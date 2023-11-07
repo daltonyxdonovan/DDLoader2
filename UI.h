@@ -9,6 +9,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <curl/curl.h>
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -163,10 +164,6 @@ public:
 
         this->buttons.push_back(new Button("THANK YOU <3", sf::Vector2f(400, 455)));
         buttons[13]->setSize(sf::Vector2f(760,30));
-
-        
-
-
 
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
@@ -657,18 +654,65 @@ public:
         Log("UpdateFromZip() has ran");
     }
 
-    void UpdateFromGithub()
+    void UpdateFromGithub() 
     {
-        //download zip of JSON assets
+        std::string gamesJsonURL = "https://github.com/daltonyxdonovan/DDLoader2/raw/master/GamesJSON.zip";
+        std::string gamesPngURL = "https://github.com/daltonyxdonovan/DDLoader2/raw/master/GamesPNG.zip";
+        std::string gamesJsonZip = "GamesJSON.zip";
+        std::string gamesPngZip = "GamesPNG.zip";
+
+        std::string gamesJsonDestination = "resources/games/";
+        std::string gamesPngDestination = "resources/images/";
+
+        // Download JSON assets from GitHub
+        DownloadFromURL(gamesJsonURL, gamesJsonZip);
+
+        // Unzip JSON assets to the specified directory
+        Unzip(gamesJsonZip, gamesJsonDestination);
+
+        // Download PNG assets from GitHub
+        DownloadFromURL(gamesPngURL, gamesPngZip);
+
+        // Unzip PNG assets to the specified directory
+        Unzip(gamesPngZip, gamesPngDestination);
+
+        Log("UpdateFromGithub() has run");
+    }
 
 
-        //move JSON assets to 'resources/games/'
+    size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) 
+    {
+        // Write callback function to handle downloaded data
+        return size * nmemb;
+    }
 
-        //download zip of PNG assets
+    void DownloadFromURL(const std::string& url, const std::string& destination) 
+    {
+        CURL *curl;
+        FILE *fp;
+        CURLcode res;
 
-        //move PNG assets to 'resources/images'
+        curl = curl_easy_init();
+        if (curl) {
+            // Set the URL to download
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-        Log("UpdateFromGithub() has ran");
+            // Set the file to save the downloaded content
+            fp = fopen(destination.c_str(), "wb");
+            if (fp) {
+                curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+
+                // Perform the download
+                res = curl_easy_perform(curl);
+                if (res != CURLE_OK) {
+                    fprintf(stderr, "Failed: %s\n", curl_easy_strerror(res));
+                }
+
+                // Clean up
+                fclose(fp);
+            }
+            curl_easy_cleanup(curl);
+        }
     }
 
     void createPluginsFolder(std::string dir)
