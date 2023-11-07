@@ -12,8 +12,6 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-
-
 class UI
 {
 public:
@@ -39,6 +37,8 @@ public:
     int gameIndex = 0;
     std::string pathChosen = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wobbly Life";
     sf::Text noModsText;
+    sf::Text settingsText;
+    bool isSettingsOpen = false;
     
     UI(std::vector<Game> games)
     {
@@ -48,6 +48,13 @@ public:
         noModsText.setCharacterSize(60);
         noModsText.setFillColor(sf::Color(0,100,100));
         noModsText.setStyle(sf::Text::Bold);
+
+        settingsText.setString("EXTRAS");
+        settingsText.setFont(font);
+        settingsText.setCharacterSize(60);
+        settingsText.setFillColor(sf::Color(0,80,80));
+        settingsText.setStyle(sf::Text::Bold);
+        settingsText.setPosition(sf::Vector2f(400,60));
         
         buttons = std::vector<Button*>();
         mods = std::vector<std::unique_ptr<Mod>>();
@@ -65,6 +72,7 @@ public:
         this->bepinexVersion.setStyle(sf::Text::Bold);
         bepInstalled = "FALSE";
         this->isInstalled = false;
+
         if (IsBepinexInstalled(games[0].installLocation))
         {
             bepInstalled = "TRUE";
@@ -111,6 +119,18 @@ public:
                     6) mod manager
                     7) exit mod manager
                     8) install mod
+
+
+                         -settings buttons vvvv
+                    9) update ddloader
+                    10) offline update ddloader
+
+
+                        -game switcher buttons vvvv
+                    11) +gameIndex
+                    12) -gameIndex
+
+                    13) thank yous
         */
 
         this->buttons.push_back(new Button("Install BepInEx 5", sf::Vector2f(206, 690)));
@@ -130,6 +150,19 @@ public:
         buttons[7]->setSize(sf::Vector2f(370,180));
         this->buttons.push_back(new Button("Install Mod", sf::Vector2f(206, 690)));
         buttons[8]->setSize(sf::Vector2f(370,180));
+
+        this->buttons.push_back(new Button("Update DDLoader", sf::Vector2f(206,690)));
+        buttons[9]->setSize(sf::Vector2f(370,180));
+        this->buttons.push_back(new Button("Offline Update\n (.zip method)", sf::Vector2f(800-206,690)));
+        buttons[10]->setSize(sf::Vector2f(370,180));
+
+        this->buttons.push_back(new Button("Discord", sf::Vector2f(206,530)));
+        buttons[11]->setSize(sf::Vector2f(370,90));
+        this->buttons.push_back(new Button("GitHub", sf::Vector2f(800-206,530)));
+        buttons[12]->setSize(sf::Vector2f(370,90));
+
+        this->buttons.push_back(new Button("GitHub", sf::Vector2f(400,530)));
+        buttons[13]->setSize(sf::Vector2f(780,90));
 
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
@@ -155,6 +188,8 @@ public:
         this->darkenerArea.setOutlineThickness(1);
         noModsText.setOrigin(noModsText.getGlobalBounds().width/2,noModsText.getGlobalBounds().height/2);
         noModsText.setPosition(sf::Vector2f(400,300));
+        
+        settingsText.setOrigin(settingsText.getGlobalBounds().width/2,settingsText.getGlobalBounds().height/2);
 
 #pragma endregion
         UpdateModlist(currentWD.getString());
@@ -181,7 +216,7 @@ public:
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
     }
 
-    void update(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
+    void updateMain(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
     {
         if (locked)
             return;
@@ -474,7 +509,7 @@ public:
         }
     }
 
-    void draw(sf::RenderWindow& window)
+    void drawMain(sf::RenderWindow& window)
 	{
         if (!isModManagerOpen)
         {
@@ -516,6 +551,109 @@ public:
                 }
             }
         }
+    }
+
+    void updateSettings(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
+    {
+        buttons[9]->update(mousePosition);
+        buttons[10]->update(mousePosition);
+        buttons[11]->update(mousePosition);
+        buttons[12]->update(mousePosition);
+
+        if (buttons[9]->isClicked(window))
+        {
+            UpdateFromGithub();
+            buttons[9]->state = DEFAULT;
+            LockButtons();
+        }
+
+        else if (buttons[10]->isClicked(window))
+        {
+            UpdateFromZip();
+            buttons[10]->state = DEFAULT;
+            LockButtons();
+        }
+
+        else if (buttons[11]->isClicked(window))
+        {
+            OpenDiscord();
+            buttons[11]->state = DEFAULT;
+            LockButtons();
+        }
+
+        else if (buttons[12]->isClicked(window))
+        {
+            OpenGithub();
+            buttons[12]->state = DEFAULT;
+            LockButtons();
+        }
+    }
+
+    void drawSettings(sf::RenderWindow& window)
+    {
+        window.draw(settingsText);
+        window.draw(buttonArea);
+        buttons[9]->draw(window);
+        buttons[10]->draw(window);
+        buttons[11]->draw(window);
+        buttons[12]->draw(window);
+
+    }
+
+    void OpenGithub() 
+    {
+        const char* url = "https://github.com/daltonyxdonovan/DDLoader2";
+
+        std::string command = "start ";
+        command += url;
+        int errorCode = system(command.c_str());
+        if (errorCode == 0) {
+            std::cout << "Opening GitHub page!" << std::endl;
+        } else {
+            std::cerr << "Failed to open GitHub page." << std::endl;
+        }
+    }
+
+    void OpenDiscord() 
+    {
+        const char* url = "https://discord.com/invite/KR7xN3q9uR";
+
+        std::string command = "start ";
+        command += url;
+        int errorCode = system(command.c_str());
+        if (errorCode == 0) {
+            std::cout << "Opening Discord server page!" << std::endl;
+        } else {
+            std::cerr << "Failed to open Discord server page." << std::endl;
+        }
+    }
+
+    void UpdateFromZip()
+    {
+        //check name of zip, to make sure it is valid
+
+        //if so, take JSON assets from folder
+
+        //move them to 'resources/games/'
+
+        //if so, take PNG assets from folder 2
+
+        //move them to 'resources/images/'
+
+        Log("UpdateFromZip() has ran");
+    }
+
+    void UpdateFromGithub()
+    {
+        //download zip of JSON assets
+
+        //move JSON assets to 'resources/games/'
+
+        //download zip of PNG assets
+
+        //move PNG assets to 'resources/images'
+
+        Log("UpdateFromGithub() has ran");
     }
 
     void createPluginsFolder(std::string dir)

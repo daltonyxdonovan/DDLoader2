@@ -38,12 +38,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <filesystem>
-#include <fstream>
-#include <cstdlib>
 #include <string>
-#include <Windows.h>
-#include <ShlObj.h>
 #include "UI.h"
 #include "Game.h"
 #include "Titlebar.h"
@@ -51,6 +46,7 @@
 #include "Mod.h"
 #include "Game.h"
 #include "json.hpp"
+
 using json = nlohmann::json;
 
 #pragma region METHODS
@@ -187,8 +183,16 @@ int main()
 
         window.clear(sf::Color(0,116,116));
 
-        ui.update(mousePosition, window, locked);
-        ui.draw(window);
+        if (!isSettingsOpen)
+        {
+            ui.updateMain(mousePosition, window, locked);
+            ui.drawMain(window);
+        }
+        else
+        {
+            ui.updateSettings(mousePosition,window,locked);
+            ui.drawSettings(window);
+        }
 
         titleBar.update(mousePosition, window, isSettingsOpen);
         titleBar.draw(window);
