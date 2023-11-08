@@ -9,9 +9,12 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
-#include <curl/curl.h>
 #include "json.hpp"
 using json = nlohmann::json;
+
+//disable warnings
+#define _CRT_SECURE_NO_WARNINGS
+
 
 class UI
 {
@@ -358,21 +361,25 @@ public:
         IFileOpenDialog* openFileDialog;
         HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&openFileDialog));
 
-        if (SUCCEEDED(hr)) {
+        if (SUCCEEDED(hr)) 
+        {
             COMDLG_FILTERSPEC fileTypes[] = { L"ZIP Files", L"*.zip" };
             openFileDialog->SetFileTypes(1, fileTypes);
 
             hr = openFileDialog->Show(NULL);
 
-            if (SUCCEEDED(hr)) {
+            if (SUCCEEDED(hr)) 
+            {
                 IShellItem* pItem;
                 hr = openFileDialog->GetResult(&pItem);
 
-                if (SUCCEEDED(hr)) {
+                if (SUCCEEDED(hr)) 
+                {
                     PWSTR filePath;
                     hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
 
-                    if (SUCCEEDED(hr)) {
+                    if (SUCCEEDED(hr)) 
+                    {
                         // Convert LPWSTR to std::wstring
                         std::wstring wstr(filePath);
                         std::string zipFile(wstr.begin(), wstr.end());
@@ -571,7 +578,50 @@ public:
 
         else if (buttons[10]->isClicked(window))
         {
-            UpdateFromZip();
+            std::string directoryProgramStartedIn = std::filesystem::current_path().string(); // Get current directory
+
+            IFileOpenDialog* openFileDialog;
+            HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&openFileDialog));
+
+            if (SUCCEEDED(hr)) 
+            {
+                COMDLG_FILTERSPEC fileTypes[] = { L"ZIP Files", L"*.zip" };
+                openFileDialog->SetFileTypes(1, fileTypes);
+
+                hr = openFileDialog->Show(NULL);
+
+                if (SUCCEEDED(hr)) 
+                {
+                    IShellItem* pItem;
+                    hr = openFileDialog->GetResult(&pItem);
+
+                    if (SUCCEEDED(hr)) 
+                    {
+                        PWSTR filePath;
+                        hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
+
+                        if (SUCCEEDED(hr)) 
+                        {
+                            // Convert LPWSTR to std::wstring
+                            std::wstring wstr(filePath);
+                            std::string zipFile(wstr.begin(), wstr.end());
+
+                            std::filesystem::path path(zipFile); // Convert to filesystem path
+                            std::string directoryZipIsIn = path.parent_path().string(); // Get parent directory
+
+                            
+
+                            UpdateFromZip(directoryZipIsIn, directoryProgramStartedIn);
+
+                            CoTaskMemFree(filePath);
+                        }
+
+                        pItem->Release();
+                    }
+                }
+
+                openFileDialog->Release();
+            }
             buttons[10]->state = DEFAULT;
             LockButtons();
         }
@@ -639,19 +689,45 @@ public:
         }
     }
 
-    void UpdateFromZip()
+    void UpdateFromZip(std::string dirOfZip, std::string currentwd) 
     {
-        //check name of zip, to make sure it is valid
+        std::string updateZip = dirOfZip + "\\DDUpdate.zip"; // Path to DDUpdate.zip
 
-        //if so, take JSON assets from folder
+        // Check if DDUpdate.zip exists
+        if (std::filesystem::exists(updateZip)) {
+            // Check if GamesJSON.zip and GamesPNG.zip exist within DDUpdate.zip
+            std::string gamesJsonZip = dirOfZip + "\\GamesJSON.zip";
+            std::string gamesPngZip = dirOfZip + "\\GamesPNG.zip";
 
-        //move them to 'resources/games/'
+            if (std::filesystem::exists(gamesJsonZip) && std::filesystem::exists(gamesPngZip)) {
+                // Unzip GamesJSON.zip to 'resources/games' directory
+                Unzip(gamesJsonZip, currentwd + "\\resources\\games");
 
-        //if so, take PNG assets from folder 2
+                // Unzip GamesPNG.zip to 'resources/images' directory
+                Unzip(gamesPngZip, currentwd + "\\resources\\images");
+                Log("Extraction completed successfully.");
+            } else {
+                Log("GamesJSON.zip and/or GamesPNG.zip not found within DDUpdate.zip.");
+            }
+        } else {
+            Log("DDUpdate.zip not found in the specified directory.");
+        }
 
-        //move them to 'resources/images/'
+        Log("UpdateFromZip() has run");
+    }
 
-        Log("UpdateFromZip() has ran");
+    bool DownloadFileFromURL(const std::string& url, const std::string& destination) 
+    {
+        // Use Windows-specific command to download a file from URL
+        std::string command = "certutil -urlcache -split -f " + url + " " + destination;
+    
+        // Convert string command to const char* for system()
+        const char* cmd = command.c_str();
+
+        // Execute the command to download the file
+        int result = system(cmd);
+
+        return result == 0; // Check if the command was executed successfully
     }
 
     void UpdateFromGithub() 
@@ -665,55 +741,24 @@ public:
         std::string gamesPngDestination = "resources/images/";
 
         // Download JSON assets from GitHub
-        DownloadFromURL(gamesJsonURL, gamesJsonZip);
-
-        // Unzip JSON assets to the specified directory
-        Unzip(gamesJsonZip, gamesJsonDestination);
+        if (DownloadFileFromURL(gamesJsonURL, gamesJsonZip)) {
+            Log("Downloaded JSON assets successfully.");
+        } else {
+            Log("Failed to download JSON assets.");
+        }
 
         // Download PNG assets from GitHub
-        DownloadFromURL(gamesPngURL, gamesPngZip);
-
-        // Unzip PNG assets to the specified directory
-        Unzip(gamesPngZip, gamesPngDestination);
+        if (DownloadFileFromURL(gamesPngURL, gamesPngZip)) {
+            Log("Downloaded PNG assets successfully.");
+        } else {
+            Log("Failed to download PNG assets.");
+        }
 
         Log("UpdateFromGithub() has run");
     }
 
 
-    size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) 
-    {
-        // Write callback function to handle downloaded data
-        return size * nmemb;
-    }
-
-    void DownloadFromURL(const std::string& url, const std::string& destination) 
-    {
-        CURL *curl;
-        FILE *fp;
-        CURLcode res;
-
-        curl = curl_easy_init();
-        if (curl) {
-            // Set the URL to download
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-            // Set the file to save the downloaded content
-            fp = fopen(destination.c_str(), "wb");
-            if (fp) {
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-
-                // Perform the download
-                res = curl_easy_perform(curl);
-                if (res != CURLE_OK) {
-                    fprintf(stderr, "Failed: %s\n", curl_easy_strerror(res));
-                }
-
-                // Clean up
-                fclose(fp);
-            }
-            curl_easy_cleanup(curl);
-        }
-    }
+    
 
     void createPluginsFolder(std::string dir)
     {

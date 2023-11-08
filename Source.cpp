@@ -46,6 +46,9 @@
 #include "Game.h"
 #include "json.hpp"
 
+//disable warnings
+#define _CRT_SECURE_NO_WARNINGS
+
 using json = nlohmann::json;
 
 class Tester
