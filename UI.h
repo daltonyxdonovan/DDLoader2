@@ -168,10 +168,10 @@ public:
         this->buttons.push_back(new Button("THANK YOU <3", sf::Vector2f(400, 455)));
         buttons[13]->setSize(sf::Vector2f(760,30));
 
-        this->buttons.push_back(new Button(">>", sf::Vector2f(750, 400)));
-        buttons[14]->setSize(sf::Vector2f(50,50));
-        this->buttons.push_back(new Button("<<", sf::Vector2f(50, 400)));
-        buttons[15]->setSize(sf::Vector2f(50,50));
+        this->buttons.push_back(new Button(">>", sf::Vector2f(750, 350)));
+        buttons[14]->setSize(sf::Vector2f(50,100));
+        this->buttons.push_back(new Button("<<", sf::Vector2f(50, 350)));
+        buttons[15]->setSize(sf::Vector2f(50,100));
         
 
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));

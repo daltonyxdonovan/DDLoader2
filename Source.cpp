@@ -330,6 +330,12 @@ int main()
 
     sf::RenderWindow window(sf::VideoMode(width, height), "DDLOADER <3", sf::Style::None);
     font.loadFromFile("resources/fonts/monospace.ttf");
+    sf::Image icon;
+    icon.loadFromFile("resources/images/icon.png");
+    window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+
+
+
     WipeLog();
     LoadGames(games);
     UI ui(games);

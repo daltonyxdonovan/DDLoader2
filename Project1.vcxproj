@@ -157,8 +157,16 @@
     <ClInclude Include="ButtonState.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Mod.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Titlebar.h" />
     <ClInclude Include="UI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Project1.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\images\icon.ico" />
+    <Image Include="resources\images\icon.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
