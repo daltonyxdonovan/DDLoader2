@@ -1,3 +1,47 @@
 Loaded assets for Wobbly Life
 Loaded assets for Hollow Knight
+Loaded assets for Colony Survival
+Loaded assets for Muck
+Loaded assets for Havendock
+Loaded assets for Regions Of Ruin
+Loaded assets for Void Crew
+Loaded assets for Slime Rancher
+Loaded assets for 7 Days To Die
+Loaded assets for Rust
 Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
+Passed Bepinex Check!
+Passed Bepinex Check!
+Passed Bepinex Check!
+BepInEx is not installed!
