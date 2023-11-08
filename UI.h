@@ -753,26 +753,27 @@ public:
         std::string updateZip = dirOfZip + "\\DDUpdate.zip"; // Path to DDUpdate.zip
 
         // Check if DDUpdate.zip exists
-        if (std::filesystem::exists(updateZip)) {
-            // Check if GamesJSON.zip and GamesPNG.zip exist within DDUpdate.zip
+        if (std::filesystem::exists(updateZip)) 
+        {
             std::string gamesJsonZip = dirOfZip + "\\GamesJSON.zip";
             std::string gamesPngZip = dirOfZip + "\\GamesPNG.zip";
 
-            if (std::filesystem::exists(gamesJsonZip) && std::filesystem::exists(gamesPngZip)) {
-                // Unzip GamesJSON.zip to 'resources/games' directory
-                Unzip(gamesJsonZip, currentwd + "\\resources\\games");
+            //unzip updateZip to currentwd
+            Unzip(updateZip, dirOfZip);
 
-                // Unzip GamesPNG.zip to 'resources/images' directory
-                Unzip(gamesPngZip, currentwd + "\\resources\\images");
-                Log("Extraction completed successfully.");
-            } else {
-                Log("GamesJSON.zip and/or GamesPNG.zip not found within DDUpdate.zip.");
-            }
-        } else {
-            Log("DDUpdate.zip not found in the specified directory.");
+
+
+            
+            // Unzip GamesJSON.zip to 'resources/games' directory
+            Unzip(gamesJsonZip, currentwd + "\\resources\\games");
+
+            // Unzip GamesPNG.zip to 'resources/images' directory
+            Unzip(gamesPngZip, currentwd + "\\resources\\images");
+            Log("Extraction completed successfully.");
+            
+
+            Log("UpdateFromZip() has run");
         }
-
-        Log("UpdateFromZip() has run");
     }
 
     bool DownloadFileFromURL(const std::string& url, const std::string& destination) 
