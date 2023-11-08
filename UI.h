@@ -168,6 +168,12 @@ public:
         this->buttons.push_back(new Button("THANK YOU <3", sf::Vector2f(400, 455)));
         buttons[13]->setSize(sf::Vector2f(760,30));
 
+        this->buttons.push_back(new Button(">>", sf::Vector2f(750, 400)));
+        buttons[14]->setSize(sf::Vector2f(50,50));
+        this->buttons.push_back(new Button("<<", sf::Vector2f(50, 400)));
+        buttons[15]->setSize(sf::Vector2f(50,50));
+        
+
         this->buttonArea.setFillColor(sf::Color(0, 148, 148));
         this->buttonArea.setSize(sf::Vector2f(780,200));
         this->buttonArea.setOrigin(390,this->buttonArea.getGlobalBounds().height/2);
@@ -218,14 +224,54 @@ public:
         this->currentWD.setString(game.installLocation);
         this->title.setOrigin((int)this->title.getLocalBounds().width / 2, (int)this->title.getLocalBounds().height / 2);
         this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
+        //set the picture of the game
+        std::string gamePicName = "resources/images/game" + std::to_string(gameIndex) + ".png";
+        image.loadFromFile(gamePicName);
+        this->displayArea.setTexture(&image);
+        if (IsBepinexInstalled(game.installLocation))
+        {
+            bepInstalled = "TRUE";
+            this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
+            this->bepinexVersion.setFillColor(sf::Color::Green);
+            this->isInstalled = true;
+        }
+        else
+		{
+        	bepInstalled = "FALSE";
+            this->bepinexVersion.setString("BEPINEX INSTALLED: " + bepInstalled);
+            this->bepinexVersion.setOrigin((int)this->bepinexVersion.getLocalBounds().width / 2, (int)this->bepinexVersion.getLocalBounds().height / 2);
+        	this->bepinexVersion.setFillColor(sf::Color::Red);
+        	this->isInstalled = false;
+        }
     }
 
-    void updateMain(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked)
+    void updateMain(sf::Vector2i mousePosition, sf::RenderWindow& window, bool locked, std::vector<Game> games)
     {
         if (locked)
             return;
         if (!isModManagerOpen)
         {
+            buttons[14]->update(mousePosition);
+            buttons[15]->update(mousePosition);
+            if (buttons[14]->isClicked(window))
+            {
+                gameIndex++;
+                if (gameIndex > games.size() - 1)
+					gameIndex = 0;
+                set(games[gameIndex]);
+				buttons[14]->state = DEFAULT;
+                LockButtons();
+            }
+            if (buttons[15]->isClicked(window))
+			{
+            	gameIndex--;
+            	if (gameIndex < 0)
+                    gameIndex = games.size() - 1;
+                set(games[gameIndex]);
+                buttons[15]->state = DEFAULT;
+                LockButtons();
+            }
             if (!isInstalled)
             {
                 buttons[0]->update(mousePosition);
@@ -476,6 +522,15 @@ public:
         buttons[5]->ticker = 30;
         buttons[6]->ticker = 30;
         buttons[7]->ticker = 30;
+        buttons[8]->ticker = 30;
+        buttons[9]->ticker = 30;
+        buttons[10]->ticker = 30;
+        buttons[11]->ticker = 30;
+        buttons[12]->ticker = 30;
+        buttons[13]->ticker = 30;
+        buttons[14]->ticker = 30;
+        buttons[15]->ticker = 30;
+
     }
 
     bool HasMods(std::string dir)
@@ -521,6 +576,7 @@ public:
 	{
         if (!isModManagerOpen)
         {
+            
             window.draw(buttonArea);
             window.draw(displayArea);
             window.draw(darkenerArea);
@@ -540,6 +596,9 @@ public:
                 buttons[5]->draw(window);
                 buttons[6]->draw(window);
             }
+
+            buttons[14]->draw(window);
+            buttons[15]->draw(window);
         }
         else
         {

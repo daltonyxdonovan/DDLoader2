@@ -414,7 +414,7 @@ int main()
 
         if (!isSettingsOpen)
         {
-            ui.updateMain(mousePosition, window, locked);
+            ui.updateMain(mousePosition, window, locked, games);
             ui.drawMain(window);
         }
         else
