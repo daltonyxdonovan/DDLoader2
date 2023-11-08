@@ -761,8 +761,12 @@ public:
             //unzip updateZip to currentwd
             Unzip(updateZip, dirOfZip);
 
-
-
+            //check if gamesJsonZip and gamesPngZip exist in dirOfZip
+            if (!std::filesystem::exists(gamesJsonZip) || !std::filesystem::exists(gamesPngZip)) 
+			{
+            	Log("GamesJSON.zip or GamesPNG.zip does not exist in DDUpdate.zip");
+            	return;
+            }
             
             // Unzip GamesJSON.zip to 'resources/games' directory
             Unzip(gamesJsonZip, currentwd + "\\resources\\games");
@@ -770,9 +774,6 @@ public:
             // Unzip GamesPNG.zip to 'resources/images' directory
             Unzip(gamesPngZip, currentwd + "\\resources\\images");
             Log("Extraction completed successfully.");
-            
-
-            Log("UpdateFromZip() has run");
         }
     }
 
