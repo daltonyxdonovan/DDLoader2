@@ -9,19 +9,3 @@ Loaded assets for Slime Rancher
 Loaded assets for 7 Days To Die
 Loaded assets for Rust
 Passed Bepinex Check!
-Passed Bepinex Check!
-BepInEx is not installed!
-Passed Bepinex Check!
-Passed Bepinex Check!
-Passed Bepinex Check!
-BepInEx is not installed!
-BepInEx is not installed!
-BepInEx is not installed!
-BepInEx is not installed!
-Passed Bepinex Check!
-Passed Bepinex Check!
-BepInEx is not installed!
-Passed Bepinex Check!
-Passed Bepinex Check!
-Passed Bepinex Check!
-BepInEx is not installed!

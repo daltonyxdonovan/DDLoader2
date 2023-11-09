@@ -13,6 +13,7 @@ public:
     sf::Font font;
     ButtonState state;
     int ticker = 30;
+    bool interactable;
 
     Button() 
     {
@@ -34,6 +35,7 @@ public:
         this->rect.setOrigin(rect.getLocalBounds().left + rect.getLocalBounds().width / 2.0f, rect.getLocalBounds().top + rect.getLocalBounds().height / 2.0f);
         this->rect.setPosition(sf::Vector2f(0,0));
         this->state = DEFAULT;
+        this->interactable = true;
     }
 
 
@@ -61,10 +63,13 @@ public:
         rect.setOutlineColor(sf::Color::Black);
 
         state = DEFAULT;
+        this->interactable = true;
     }
 
     bool isClicked(sf::RenderWindow& window)
     {
+        if (!interactable)
+			return false;
         if (ticker == 0)
         {
             
@@ -73,8 +78,15 @@ public:
         return false;
     }
 
+    void setUse(bool use)
+	{
+    	interactable = use;
+    }
+
     void update(sf::Vector2i mousePosition)
     {
+        if (!interactable)
+			return;
         if (ticker > 0)
             ticker--;
         if (state == HOVER)
